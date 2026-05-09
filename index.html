@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mood Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { overscroll-behavior: none; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #F5E9D4;
+    color: #3D5468;
+    min-height: 100vh;
+    padding: 24px 20px 40px;
+    background-image:
+      radial-gradient(circle at 10% 5%, rgba(168, 213, 208, 0.25) 0%, transparent 30%),
+      radial-gradient(circle at 90% 95%, rgba(91, 143, 176, 0.15) 0%, transparent 35%);
+  }
+
+  /* ---- Wave header ---- */
+  .wave { width: 100%; height: 24px; margin-bottom: 16px; opacity: 0.4; }
+
+  /* ---- Quote card ---- */
+  .quote-card {
+    background: linear-gradient(135deg, rgba(168, 213, 208, 0.5), rgba(143, 193, 221, 0.35));
+    border-radius: 22px;
+    padding: 18px 20px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .quote-card::before {
+    content: '“';
+    position: absolute;
+    top: -10px; left: 12px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 70px;
+    color: rgba(91, 143, 176, 0.2);
+    line-height: 1;
+  }
+  .quote-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    font-style: italic;
+    color: #2C4A63;
+    line-height: 1.4;
+    position: relative;
+    z-index: 1;
+  }
+  .quote-author {
+    font-size: 11px;
+    color: #5B8FB0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 8px;
+    text-align: right;
+  }
+
+  /* ---- Home screen ---- */
+  .header { text-align: center; margin-bottom: 28px; }
+  .date {
+    font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+    color: #5B8FB0; margin-bottom: 8px;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500; font-size: 28px; line-height: 1.2;
+  }
+  h1 em { font-style: italic; color: #5B8FB0; }
+
+  .moods {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+    margin-bottom: 24px;
+  }
+  .mood {
+    background: #FBF5E9;
+    border-radius: 28px;
+    aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 38px;
+    box-shadow: 0 4px 14px rgba(91, 143, 176, 0.12), inset 0 -2px 0 rgba(91, 143, 176, 0.06);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    border: none;
+  }
+  .mood:active { transform: scale(0.94); }
+  .mood.selected {
+    background: #A8D5D0;
+    box-shadow: 0 6px 18px rgba(91, 143, 176, 0.25);
+    transform: scale(1.02);
+  }
+
+  .more-emojis {
+    display: block;
+    margin: -8px auto 18px;
+    background: transparent;
+    border: none;
+    color: #5B8FB0;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 6px 14px;
+    border-radius: 14px;
+  }
+  .more-emojis:active { background: rgba(91, 143, 176, 0.1); }
+
+  .custom-pill {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(168, 213, 208, 0.5), rgba(143, 193, 221, 0.4));
+    border-radius: 20px;
+    padding: 8px 8px 8px 16px;
+    margin: 0 auto 18px;
+    width: fit-content;
+    font-size: 13px;
+    color: #2C4A63;
+  }
+  .custom-pill.visible { display: flex; }
+  .custom-pill #customPillEmoji { font-size: 22px; }
+  .custom-pill button {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: rgba(255, 253, 247, 0.7);
+    border: none;
+    color: #5B8FB0;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  /* Emoji picker modal */
+  .emoji-modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(61, 84, 104, 0.5);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 150;
+  }
+  .emoji-modal-bg.open { display: flex; animation: fadein 0.2s ease; }
+  .emoji-modal {
+    background: #F5E9D4;
+    width: 100%;
+    max-width: 500px;
+    max-height: 70vh;
+    border-radius: 28px 28px 0 0;
+    padding: 20px 20px 28px;
+    display: flex; flex-direction: column;
+    animation: slideup 0.25s ease;
+  }
+  .emoji-modal .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+  }
+  .emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    overflow-y: auto;
+    padding: 4px;
+  }
+  .emoji-grid button {
+    aspect-ratio: 1;
+    border: none;
+    background: #FBF5E9;
+    border-radius: 14px;
+    font-size: 26px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(91, 143, 176, 0.08);
+  }
+  .emoji-grid button:active { transform: scale(0.92); background: #A8D5D0; }
+  .emoji-section-title {
+    grid-column: 1 / -1;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    color: #5B8FB0;
+    margin-top: 8px;
+    padding-left: 4px;
+  }
+
+  .note-row {
+    display: flex; gap: 10px; margin-bottom: 24px;
+  }
+  .note-row input {
+    flex: 1;
+    padding: 14px 16px;
+    border-radius: 18px;
+    border: none;
+    background: #FBF5E9;
+    color: #3D5468;
+    font-family: inherit;
+    font-size: 15px;
+    box-shadow: 0 2px 8px rgba(91, 143, 176, 0.08);
+    outline: none;
+  }
+  .note-row input::placeholder { color: #B5C7D4; font-style: italic; }
+  .note-row button {
+    border: none;
+    background: #5B8FB0;
+    color: #FBF5E9;
+    border-radius: 18px;
+    padding: 0 18px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(91, 143, 176, 0.3);
+  }
+  .note-row button:active { transform: scale(0.96); }
+  .note-row button:disabled { opacity: 0.5; box-shadow: none; }
+
+  .photo-row {
+    display: flex; gap: 10px; align-items: center;
+    margin-bottom: 18px;
+  }
+  .photo-btn {
+    flex: 1;
+    background: #FBF5E9;
+    border: 1px dashed rgba(91, 143, 176, 0.35);
+    color: #5B8FB0;
+    border-radius: 18px;
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .photo-btn:active { transform: scale(0.98); }
+  .photo-preview {
+    display: none;
+    align-items: center; gap: 10px;
+    background: #FBF5E9;
+    border-radius: 18px;
+    padding: 8px 8px 8px 12px;
+    flex: 1;
+  }
+  .photo-preview.visible { display: flex; }
+  .photo-preview img {
+    width: 44px; height: 44px;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+  .photo-preview .label {
+    flex: 1; font-size: 12px; color: #5B8FB0;
+  }
+  .photo-preview .remove {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: rgba(201, 123, 99, 0.12);
+    border: none;
+    color: #C97B63;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  #cameraInput, #libraryInput { display: none; }
+  .photo-btn-camera {
+    background: linear-gradient(135deg, rgba(168, 213, 208, 0.4), rgba(143, 193, 221, 0.3));
+    border-style: solid;
+    color: #2C4A63;
+  }
+  .photo-btn-library {
+    background: #FBF5E9;
+  }
+
+  .day .photo-corner {
+    position: absolute;
+    bottom: -2px; right: -2px;
+    width: 12px; height: 12px;
+    background: #FBF5E9;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px;
+    box-shadow: 0 1px 3px rgba(91, 143, 176, 0.3);
+  }
+
+  /* ---- Calendar ---- */
+  .calendar-card {
+    background: #FBF5E9;
+    border-radius: 24px;
+    padding: 24px 20px;
+    box-shadow: 0 4px 14px rgba(91, 143, 176, 0.1);
+  }
+  .cal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 18px;
+  }
+  .cal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 500;
+  }
+  .cal-arrows { display: flex; gap: 18px; color: #5B8FB0; font-size: 22px; cursor: pointer; user-select: none; }
+  .cal-arrows span { padding: 0 6px; cursor: pointer; }
+  .weekdays {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+    margin-bottom: 8px;
+  }
+  .weekday { text-align: center; font-size: 11px; color: #9AAFC0; letter-spacing: 1px; }
+  .days {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+  }
+  .day {
+    aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #9AAFC0;
+    position: relative;
+    cursor: pointer;
+    border-radius: 50%;
+  }
+  .day.empty { color: transparent; cursor: default; }
+  .day .dot {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #FBF5E9; font-weight: 600; font-size: 11px;
+    transition: transform 0.15s ease;
+  }
+  .day:active .dot { transform: scale(0.9); }
+  .day.today .dot { box-shadow: 0 0 0 2px #3D5468; }
+  .day.today.no-mood {
+    box-shadow: inset 0 0 0 2px #3D5468;
+    color: #3D5468; font-weight: 700;
+  }
+
+  /* Six shades of blue (light → dark) for the 6 moods */
+  .dot.happy { background: #BFDDF0; color: #3D5468; }    /* sky */
+  .dot.love  { background: #8FC1DD; color: #FBF5E9; }    /* cornflower */
+  .dot.calm  { background: #A8D5D0; color: #2C4A63; }    /* seafoam */
+  .dot.meh   { background: #6FA3C2; color: #FBF5E9; }    /* steel */
+  .dot.sad   { background: #3F6E91; color: #FBF5E9; }    /* deep ocean */
+  .dot.angry { background: #1F4A6B; color: #FBF5E9; }    /* navy */
+
+  /* Tiny count badge for days with multiple entries */
+  .day .count-badge {
+    position: absolute;
+    top: -2px; right: -2px;
+    background: #3D5468; color: #FBF5E9;
+    font-size: 9px; font-weight: 700;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .legend {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 14px;
+    margin-top: 18px;
+    font-size: 11px; color: #5B8FB0;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-swatch {
+    width: 12px; height: 12px; border-radius: 50%;
+  }
+
+  /* ---- Day modal (chat view) ---- */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(61, 84, 104, 0.5);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-bg.open { display: flex; animation: fadein 0.2s ease; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: #F5E9D4;
+    width: 100%;
+    max-width: 500px;
+    max-height: 85vh;
+    border-radius: 28px 28px 0 0;
+    padding: 20px 20px 28px;
+    display: flex; flex-direction: column;
+    animation: slideup 0.25s ease;
+  }
+  @keyframes slideup { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px; padding-bottom: 12px;
+    border-bottom: 1px solid rgba(91, 143, 176, 0.15);
+  }
+  .modal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 500;
+  }
+  .modal-close {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: #FBF5E9;
+    border: none;
+    font-size: 18px; color: #5B8FB0;
+    cursor: pointer;
+  }
+  .bubbles {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 4px 16px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .bubble-empty {
+    text-align: center; color: #9AAFC0; font-style: italic;
+    font-family: 'Cormorant Garamond', serif; font-size: 16px;
+    padding: 32px 0;
+  }
+  .bubble {
+    align-self: flex-end;
+    max-width: 80%;
+    background: #FBF5E9;
+    border-radius: 18px 18px 4px 18px;
+    padding: 12px 14px;
+    box-shadow: 0 2px 8px rgba(91, 143, 176, 0.1);
+    position: relative;
+  }
+  .bubble-emoji-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 6px;
+  }
+  .bubble-mood-dot {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+  .bubble-time {
+    font-size: 11px; color: #9AAFC0;
+    margin-left: auto;
+  }
+  .bubble-text {
+    font-size: 14px; color: #3D5468; line-height: 1.4;
+    word-wrap: break-word;
+  }
+  .bubble-text:empty::before {
+    content: 'just a vibe ✦';
+    color: #B5C7D4; font-style: italic;
+  }
+  .bubble-photo {
+    width: 100%; max-width: 220px;
+    border-radius: 12px;
+    margin-top: 8px;
+    display: block;
+    cursor: pointer;
+  }
+  .bubble-delete {
+    position: absolute;
+    top: -6px; left: -6px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: #FBF5E9;
+    border: 1px solid rgba(91, 143, 176, 0.2);
+    font-size: 12px; color: #C97B63;
+    cursor: pointer;
+    display: none;
+  }
+  .bubble:hover .bubble-delete { display: flex; align-items: center; justify-content: center; }
+  /* Always show delete on touch devices */
+  @media (hover: none) {
+    .bubble-delete { display: flex; align-items: center; justify-content: center; opacity: 0.6; }
+  }
+
+  .footer-tip {
+    text-align: center; margin-top: 22px;
+    font-size: 12px; color: #9AAFC0;
+    font-style: italic; font-family: 'Cormorant Garamond', serif;
+  }
+
+  /* ---- Stats card ---- */
+  .stats-card {
+    background: #FBF5E9;
+    border-radius: 24px;
+    padding: 22px 20px;
+    box-shadow: 0 4px 14px rgba(91, 143, 176, 0.1);
+    margin-top: 18px;
+  }
+  .stats-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .stats-sub {
+    font-size: 12px; color: #9AAFC0;
+    margin-bottom: 16px;
+  }
+  .stats-headline {
+    background: linear-gradient(135deg, rgba(168, 213, 208, 0.4), rgba(143, 193, 221, 0.3));
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+    font-size: 14px; color: #2C4A63;
+    line-height: 1.4;
+  }
+  .stats-headline .big-emoji { font-size: 32px; }
+  .stat-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+  }
+  .stat-emoji {
+    width: 28px; text-align: center; font-size: 18px;
+  }
+  .stat-bar-wrap {
+    flex: 1; height: 8px;
+    background: rgba(91, 143, 176, 0.1);
+    border-radius: 4px; overflow: hidden;
+  }
+  .stat-bar { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+  .stat-count { width: 32px; text-align: right; color: #5B8FB0; font-weight: 600; }
+  .stats-empty {
+    text-align: center; color: #9AAFC0; font-style: italic;
+    font-family: 'Cormorant Garamond', serif; font-size: 16px;
+    padding: 18px 0 4px;
+  }
+  .stats-streak {
+    margin-top: 14px; padding-top: 14px;
+    border-top: 1px solid rgba(91, 143, 176, 0.15);
+    display: flex; justify-content: space-around;
+    text-align: center;
+  }
+  .stats-streak .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px; font-weight: 600; color: #3D5468;
+  }
+  .stats-streak .stat-label {
+    font-size: 11px; color: #9AAFC0;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+
+  /* ---- Onboarding modal ---- */
+  .onboard-bg {
+    position: fixed; inset: 0;
+    background: linear-gradient(160deg, #F5E9D4, #E8DBC2);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 200;
+    padding: 24px;
+  }
+  .onboard-bg.open { display: flex; }
+  .onboard {
+    background: #FBF5E9;
+    border-radius: 28px;
+    padding: 32px 28px;
+    max-width: 360px; width: 100%;
+    box-shadow: 0 10px 40px rgba(91, 143, 176, 0.2);
+    text-align: center;
+  }
+  .onboard-emoji { font-size: 48px; margin-bottom: 8px; }
+  .onboard h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500; font-size: 26px; margin-bottom: 6px;
+  }
+  .onboard p {
+    color: #5B8FB0; font-size: 14px; margin-bottom: 20px;
+  }
+  .onboard input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(91, 143, 176, 0.2);
+    background: #F5E9D4;
+    font-family: inherit; font-size: 16px;
+    color: #3D5468;
+    text-align: center;
+    outline: none;
+    margin-bottom: 14px;
+  }
+  .onboard input:focus { border-color: #5B8FB0; }
+  .onboard button {
+    width: 100%;
+    border: none;
+    background: #5B8FB0;
+    color: #FBF5E9;
+    border-radius: 18px;
+    padding: 14px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(91, 143, 176, 0.3);
+  }
+  .onboard button:disabled { opacity: 0.4; box-shadow: none; }
+</style>
+</head>
+<body>
+
+  <svg class="wave" viewBox="0 0 375 24" preserveAspectRatio="none">
+    <path d="M0,12 Q47,0 94,12 T188,12 T282,12 T375,12" stroke="#5B8FB0" stroke-width="1.5" fill="none"/>
+    <path d="M0,18 Q47,8 94,18 T188,18 T282,18 T375,18" stroke="#A8D5D0" stroke-width="1.2" fill="none"/>
+  </svg>
+
+  <div class="header">
+    <div class="date" id="todayDate">—</div>
+    <h1>How are you feeling, <em id="userName">friend</em>?</h1>
+  </div>
+
+  <div class="quote-card" id="quoteCard">
+    <div class="quote-text" id="quoteText">—</div>
+    <div class="quote-author" id="quoteAuthor">—</div>
+  </div>
+
+  <div class="moods" id="moodPicker">
+    <button class="mood" data-mood="happy">😊</button>
+    <button class="mood" data-mood="joy">😄</button>
+    <button class="mood" data-mood="calm">😌</button>
+    <button class="mood" data-mood="meh">😐</button>
+    <button class="mood" data-mood="sad">😢</button>
+    <button class="mood" data-mood="angry">😡</button>
+  </div>
+  <button class="more-emojis" id="moreEmojisBtn">… pick a different feeling</button>
+  <div class="custom-pill" id="customPill">
+    you picked <span id="customPillEmoji">✨</span>
+    <button id="customPillClear">×</button>
+  </div>
+
+  <div class="note-row">
+    <input id="noteInput" type="text" placeholder="add a note (optional)" maxlength="200">
+    <button id="saveBtn" disabled>Save</button>
+  </div>
+
+  <div class="photo-row">
+    <button class="photo-btn photo-btn-camera" id="cameraBtn">📸 take photo</button>
+    <button class="photo-btn photo-btn-library" id="libraryBtn">🖼️ from library</button>
+    <div class="photo-preview" id="photoPreview">
+      <img id="photoThumb" alt="preview">
+      <div class="label">photo ready ✨</div>
+      <button class="remove" id="photoRemove">×</button>
+    </div>
+    <input type="file" id="cameraInput" accept="image/*" capture="environment">
+    <input type="file" id="libraryInput" accept="image/*">
+  </div>
+
+  <div class="calendar-card">
+    <div class="cal-header">
+      <div class="cal-title" id="calTitle">—</div>
+      <div class="cal-arrows">
+        <span id="prevMonth">‹</span>
+        <span id="nextMonth">›</span>
+      </div>
+    </div>
+    <div class="weekdays">
+      <div class="weekday">S</div><div class="weekday">M</div><div class="weekday">T</div>
+      <div class="weekday">W</div><div class="weekday">T</div><div class="weekday">F</div><div class="weekday">S</div>
+    </div>
+    <div class="days" id="calDays"></div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:#BFDDF0"></div>😊</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#8FC1DD"></div>😄</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#A8D5D0"></div>😌</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#6FA3C2"></div>😐</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#3F6E91"></div>😢</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#1F4A6B"></div>😡</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#E8DBC2"></div>✨</div>
+    </div>
+  </div>
+
+  <div class="stats-card" id="statsCard">
+    <div class="stats-title">Your moods</div>
+    <div class="stats-sub" id="statsSub">this month</div>
+    <div id="statsBody"></div>
+  </div>
+
+  <div class="footer-tip">— a little wave for every day —</div>
+
+  <!-- Emoji picker modal -->
+  <div class="emoji-modal-bg" id="emojiModalBg">
+    <div class="emoji-modal">
+      <div class="modal-header">
+        <div class="modal-title">pick any feeling</div>
+        <button class="modal-close" id="emojiModalClose">×</button>
+      </div>
+      <div class="emoji-grid" id="emojiGrid"></div>
+    </div>
+  </div>
+
+  <!-- Onboarding modal -->
+  <div class="onboard-bg" id="onboardBg">
+    <div class="onboard">
+      <div class="onboard-emoji">🌊</div>
+      <h2>welcome to your mood journal</h2>
+      <p>what should we call you?</p>
+      <input id="nameInput" type="text" maxlength="20" placeholder="your name" autocomplete="off">
+      <button id="nameSave" disabled>let's go</button>
+    </div>
+  </div>
+
+  <!-- Day detail modal -->
+  <div class="modal-bg" id="modalBg">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">—</div>
+        <button class="modal-close" id="modalClose">×</button>
+      </div>
+      <div class="bubbles" id="bubbles"></div>
+    </div>
+  </div>
+
+<script>
+  const STORAGE_KEY = 'mood-journal-entries-v1';
+  const NAME_KEY = 'mood-journal-name-v1';
+  const MOOD_EMOJI = {
+    happy: '😊', joy: '😄', calm: '😌',
+    meh: '😐', sad: '😢', angry: '😡'
+  };
+  const MOOD_LABEL = {
+    happy: 'happy', joy: 'joyful', calm: 'calm',
+    meh: 'meh', sad: 'sad', angry: 'angry'
+  };
+  const MOOD_COLOR = {
+    happy: '#BFDDF0', joy: '#8FC1DD', calm: '#A8D5D0',
+    meh: '#6FA3C2', sad: '#3F6E91', angry: '#1F4A6B',
+    custom: '#E8DBC2'
+  };
+
+  // ---- Storage with in-memory fallback (in case localStorage is sandboxed) ----
+  let memoryStore = {};
+  function lsAvailable() {
+    try {
+      localStorage.setItem('__t', '1');
+      localStorage.removeItem('__t');
+      return true;
+    } catch { return false; }
+  }
+  const HAS_LS = lsAvailable();
+  function readKey(key) {
+    if (HAS_LS) {
+      try { return localStorage.getItem(key); } catch { return memoryStore[key] || null; }
+    }
+    return memoryStore[key] || null;
+  }
+  function writeKey(key, value) {
+    if (HAS_LS) {
+      try { localStorage.setItem(key, value); return; } catch {}
+    }
+    memoryStore[key] = value;
+  }
+
+  // entries: { 'YYYY-MM-DD': [ { mood, note, time (ISO) }, ... ] }
+  function load() {
+    try { return JSON.parse(readKey(STORAGE_KEY)) || {}; }
+    catch { return {}; }
+  }
+  function save(data) {
+    writeKey(STORAGE_KEY, JSON.stringify(data));
+  }
+  function loadName() { return readKey(NAME_KEY); }
+  function saveName(n) { writeKey(NAME_KEY, n); }
+  function dateKey(d) {
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  // ---- Today header ----
+  function renderTodayHeader() {
+    const now = new Date();
+    const opts = { weekday:'long', month:'long', day:'numeric' };
+    document.getElementById('todayDate').textContent =
+      now.toLocaleDateString('en-US', opts).replace(',', ' ·');
+  }
+
+  // ---- Mood picker + save ----
+  let selectedMood = null;
+  let selectedCustomEmoji = null;
+
+  function clearCustomPill() {
+    selectedCustomEmoji = null;
+    document.getElementById('customPill').classList.remove('visible');
+  }
+
+  document.querySelectorAll('.mood').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mood').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedMood = btn.dataset.mood;
+      clearCustomPill();
+      document.getElementById('saveBtn').disabled = false;
+    });
+  });
+
+  // ---- Emoji picker ----
+  const EMOJI_GROUPS = [
+    { title: 'feelings', emojis: ['😊','😄','😌','😐','😢','😡','😍','🥰','😎','🤩','🥳','😴','😪','🥱','😤','😭','😱','🤯','😬','🙄','😶','🤔','😇','🥺','😳','😞','😩','😔','😅','🥲','😆','😋','🤗','😏','😒','😖','😟','😨','😰','🤧','🤒','😷'] },
+    { title: 'love & friends', emojis: ['❤️','💖','💕','💗','💜','💙','💚','💛','🧡','🤍','✨','🌟','⭐','💫','🥰','🫶','🤝','👯','💌','💝'] },
+    { title: 'nature & weather', emojis: ['🌊','🌸','🌺','🌷','🌻','🌹','🌼','🌿','🍃','🌳','🌴','🌵','🌾','🌙','☀️','⛅','🌤️','🌧️','⛈️','🌈','❄️','🔥','🌬️','🦋','🐚','🌅','🌄'] },
+    { title: 'fun', emojis: ['🎉','🎊','🎂','🍰','🍦','🍓','🍕','🍿','🧋','☕','🍪','🎵','🎶','🎨','🎮','📚','✏️','📷','🎀','💎','👑','🦄','🐶','🐱','🐰','🐼','🐨'] }
+  ];
+
+  function buildEmojiGrid() {
+    const grid = document.getElementById('emojiGrid');
+    grid.innerHTML = '';
+    EMOJI_GROUPS.forEach(group => {
+      const title = document.createElement('div');
+      title.className = 'emoji-section-title';
+      title.textContent = group.title;
+      grid.appendChild(title);
+      group.emojis.forEach(em => {
+        const b = document.createElement('button');
+        b.textContent = em;
+        b.addEventListener('click', () => pickCustomEmoji(em));
+        grid.appendChild(b);
+      });
+    });
+  }
+
+  function pickCustomEmoji(em) {
+    selectedMood = 'custom';
+    selectedCustomEmoji = em;
+    document.querySelectorAll('.mood').forEach(b => b.classList.remove('selected'));
+    document.getElementById('customPillEmoji').textContent = em;
+    document.getElementById('customPill').classList.add('visible');
+    document.getElementById('saveBtn').disabled = false;
+    document.getElementById('emojiModalBg').classList.remove('open');
+  }
+
+  document.getElementById('moreEmojisBtn').addEventListener('click', () => {
+    document.getElementById('emojiModalBg').classList.add('open');
+  });
+  document.getElementById('emojiModalClose').addEventListener('click', () => {
+    document.getElementById('emojiModalBg').classList.remove('open');
+  });
+  document.getElementById('emojiModalBg').addEventListener('click', (e) => {
+    if (e.target.id === 'emojiModalBg') {
+      document.getElementById('emojiModalBg').classList.remove('open');
+    }
+  });
+  document.getElementById('customPillClear').addEventListener('click', () => {
+    clearCustomPill();
+    selectedMood = null;
+    document.getElementById('saveBtn').disabled = true;
+  });
+
+  // ---- Photo handling ----
+  let pendingPhoto = null; // dataURL string
+
+  document.getElementById('cameraBtn').addEventListener('click', () => {
+    document.getElementById('cameraInput').click();
+  });
+  document.getElementById('libraryBtn').addEventListener('click', () => {
+    document.getElementById('libraryInput').click();
+  });
+
+  async function handlePhotoFile(file) {
+    if (!file) return;
+    try {
+      pendingPhoto = await compressImage(file, 800, 0.8);
+      document.getElementById('photoThumb').src = pendingPhoto;
+      document.getElementById('photoPreview').classList.add('visible');
+      document.getElementById('cameraBtn').style.display = 'none';
+      document.getElementById('libraryBtn').style.display = 'none';
+    } catch (err) {
+      alert('Could not load that photo. Try another?');
+    }
+  }
+
+  document.getElementById('cameraInput').addEventListener('change', async (e) => {
+    await handlePhotoFile(e.target.files && e.target.files[0]);
+    e.target.value = '';
+  });
+  document.getElementById('libraryInput').addEventListener('change', async (e) => {
+    await handlePhotoFile(e.target.files && e.target.files[0]);
+    e.target.value = '';
+  });
+
+  document.getElementById('photoRemove').addEventListener('click', () => {
+    pendingPhoto = null;
+    document.getElementById('photoPreview').classList.remove('visible');
+    document.getElementById('cameraBtn').style.display = '';
+    document.getElementById('libraryBtn').style.display = '';
+  });
+
+  function compressImage(file, maxDim, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > height && width > maxDim) {
+            height = Math.round(height * maxDim / width); width = maxDim;
+          } else if (height > maxDim) {
+            width = Math.round(width * maxDim / height); height = maxDim;
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    if (!selectedMood) return;
+    const note = document.getElementById('noteInput').value.trim();
+    const data = load();
+    const key = dateKey(new Date());
+    if (!data[key]) data[key] = [];
+    const entry = { mood: selectedMood, note, time: new Date().toISOString() };
+    if (selectedMood === 'custom' && selectedCustomEmoji) entry.emoji = selectedCustomEmoji;
+    if (pendingPhoto) entry.photo = pendingPhoto;
+    data[key].push(entry);
+    save(data);
+
+    // reset
+    document.querySelectorAll('.mood').forEach(b => b.classList.remove('selected'));
+    document.getElementById('noteInput').value = '';
+    selectedMood = null;
+    selectedCustomEmoji = null;
+    document.getElementById('customPill').classList.remove('visible');
+    pendingPhoto = null;
+    document.getElementById('photoPreview').classList.remove('visible');
+    document.getElementById('cameraBtn').style.display = '';
+    document.getElementById('libraryBtn').style.display = '';
+    document.getElementById('saveBtn').disabled = true;
+    renderCalendar();
+    renderStats();
+    flashSave();
+  });
+
+  function flashSave() {
+    const btn = document.getElementById('saveBtn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ saved';
+    btn.style.background = '#A8D5D0';
+    btn.style.color = '#2C4A63';
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.background = '';
+      btn.style.color = '';
+    }, 1200);
+  }
+
+  // ---- Calendar ----
+  let viewMonth = new Date();
+  viewMonth.setDate(1);
+
+  function renderCalendar() {
+    const data = load();
+    const year = viewMonth.getFullYear();
+    const month = viewMonth.getMonth();
+    document.getElementById('calTitle').textContent =
+      viewMonth.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const today = new Date();
+    const todayKey = dateKey(today);
+
+    const grid = document.getElementById('calDays');
+    grid.innerHTML = '';
+
+    for (let i = 0; i < firstDay; i++) {
+      const e = document.createElement('div');
+      e.className = 'day empty';
+      e.textContent = '·';
+      grid.appendChild(e);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dayDate = new Date(year, month, d);
+      const k = dateKey(dayDate);
+      const entries = data[k] || [];
+      const cell = document.createElement('div');
+      cell.className = 'day';
+      if (k === todayKey) cell.classList.add('today');
+
+      if (entries.length > 0) {
+        // Pick the dominant mood (most frequent; tie-breaker = most recent)
+        const counts = {};
+        entries.forEach(e => counts[e.mood] = (counts[e.mood]||0) + 1);
+        const dominant = Object.entries(counts).sort((a,b) => b[1] - a[1])[0][0];
+
+        const dot = document.createElement('div');
+        dot.className = 'dot ' + dominant;
+        dot.style.background = dotColor(dominant);
+        if (dominant === 'custom') {
+          // Show the most recent custom emoji from this day
+          const lastCustom = [...entries].reverse().find(e => e.mood === 'custom' && e.emoji);
+          dot.textContent = lastCustom ? lastCustom.emoji : d;
+          dot.style.fontSize = '15px';
+          dot.style.color = '#3D5468';
+        } else {
+          dot.textContent = d;
+        }
+        cell.appendChild(dot);
+
+        if (entries.length > 1) {
+          const badge = document.createElement('div');
+          badge.className = 'count-badge';
+          badge.textContent = entries.length;
+          cell.appendChild(badge);
+        }
+
+        if (entries.some(e => e.photo)) {
+          const corner = document.createElement('div');
+          corner.className = 'photo-corner';
+          corner.textContent = '📷';
+          cell.appendChild(corner);
+        }
+      } else {
+        if (k === todayKey) cell.classList.add('no-mood');
+        cell.textContent = d;
+      }
+
+      cell.addEventListener('click', () => openDay(k, dayDate));
+      grid.appendChild(cell);
+    }
+  }
+
+  document.getElementById('prevMonth').addEventListener('click', () => {
+    viewMonth.setMonth(viewMonth.getMonth() - 1);
+    renderCalendar();
+  });
+  document.getElementById('nextMonth').addEventListener('click', () => {
+    viewMonth.setMonth(viewMonth.getMonth() + 1);
+    renderCalendar();
+  });
+
+  // ---- Day modal ----
+  function openDay(key, dayDate) {
+    const data = load();
+    const entries = (data[key] || []).slice().sort((a,b) => new Date(a.time) - new Date(b.time));
+
+    document.getElementById('modalTitle').textContent =
+      dayDate.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+
+    const wrap = document.getElementById('bubbles');
+    wrap.innerHTML = '';
+    if (entries.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'bubble-empty';
+      empty.textContent = 'no entries this day ~';
+      wrap.appendChild(empty);
+    } else {
+      entries.forEach((e, idx) => {
+        const time = new Date(e.time).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const displayEmoji = e.mood === 'custom' ? (e.emoji || '✨') : MOOD_EMOJI[e.mood];
+        b.innerHTML = `
+          <button class="bubble-delete" title="delete">×</button>
+          <div class="bubble-emoji-row">
+            <div class="bubble-mood-dot ${e.mood}" style="background:${dotColor(e.mood)}">${displayEmoji}</div>
+            <div class="bubble-time">${time}</div>
+          </div>
+          <div class="bubble-text">${escapeHtml(e.note)}</div>
+          ${e.photo ? `<img class="bubble-photo" src="${e.photo}" alt="photo">` : ''}
+        `;
+        b.querySelector('.bubble-delete').addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          deleteEntry(key, e.time);
+          openDay(key, dayDate);
+          renderCalendar();
+        });
+        wrap.appendChild(b);
+      });
+    }
+
+    document.getElementById('modalBg').classList.add('open');
+  }
+
+  function dotColor(mood) {
+    return MOOD_COLOR[mood] || MOOD_COLOR.custom;
+  }
+
+  function deleteEntry(key, isoTime) {
+    const data = load();
+    if (!data[key]) return;
+    data[key] = data[key].filter(e => e.time !== isoTime);
+    if (data[key].length === 0) delete data[key];
+    save(data);
+  }
+
+  function escapeHtml(s) {
+    return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  document.getElementById('modalClose').addEventListener('click', () => {
+    document.getElementById('modalBg').classList.remove('open');
+  });
+  document.getElementById('modalBg').addEventListener('click', (e) => {
+    if (e.target.id === 'modalBg') {
+      document.getElementById('modalBg').classList.remove('open');
+    }
+  });
+
+  // ---- Stats ----
+  function renderStats() {
+    const data = load();
+    const year = viewMonth.getFullYear();
+    const month = viewMonth.getMonth();
+    const monthName = viewMonth.toLocaleDateString('en-US', { month:'long' });
+
+    // Count entries in this view month
+    const counts = { happy:0, joy:0, calm:0, meh:0, sad:0, angry:0, custom:0 };
+    const customEmojiCounts = {}; // emoji -> count
+    let totalEntries = 0;
+    let daysLogged = new Set();
+    Object.entries(data).forEach(([k, entries]) => {
+      const [y, m] = k.split('-');
+      if (parseInt(y) === year && parseInt(m) === month + 1) {
+        entries.forEach(e => {
+          if (counts[e.mood] !== undefined) {
+            counts[e.mood]++;
+            totalEntries++;
+            daysLogged.add(k);
+            if (e.mood === 'custom' && e.emoji) {
+              customEmojiCounts[e.emoji] = (customEmojiCounts[e.emoji]||0) + 1;
+            }
+          }
+        });
+      }
+    });
+
+    document.getElementById('statsSub').textContent =
+      monthName + ' ' + year;
+
+    const body = document.getElementById('statsBody');
+    body.innerHTML = '';
+
+    if (totalEntries === 0) {
+      body.innerHTML = '<div class="stats-empty">no moods logged yet this month ~</div>';
+      return;
+    }
+
+    // Headline: most common mood
+    const top = Object.entries(counts).sort((a,b) => b[1] - a[1])[0];
+    let topEmoji, topLabel;
+    if (top[0] === 'custom') {
+      const topCustom = Object.entries(customEmojiCounts).sort((a,b) => b[1] - a[1])[0];
+      topEmoji = topCustom ? topCustom[0] : '✨';
+      topLabel = 'a custom feeling';
+    } else {
+      topEmoji = MOOD_EMOJI[top[0]];
+      topLabel = MOOD_LABEL[top[0]];
+    }
+    const headline = document.createElement('div');
+    headline.className = 'stats-headline';
+    headline.innerHTML = `
+      <div class="big-emoji">${topEmoji}</div>
+      <div>You felt <strong>${topLabel}</strong> the most this month — ${top[1]} time${top[1]>1?'s':''}.</div>
+    `;
+    body.appendChild(headline);
+
+    const max = Math.max(...Object.values(counts));
+    const order = ['happy','joy','calm','meh','sad','angry'];
+    order.forEach(mood => {
+      const c = counts[mood];
+      const row = document.createElement('div');
+      row.className = 'stat-row';
+      const pct = max > 0 ? (c / max * 100) : 0;
+      row.innerHTML = `
+        <div class="stat-emoji">${MOOD_EMOJI[mood]}</div>
+        <div class="stat-bar-wrap">
+          <div class="stat-bar" style="width:${pct}%; background:${dotColor(mood)}"></div>
+        </div>
+        <div class="stat-count">${c}</div>
+      `;
+      body.appendChild(row);
+    });
+
+    // Custom emojis: show top 3
+    const topCustoms = Object.entries(customEmojiCounts).sort((a,b) => b[1] - a[1]).slice(0, 3);
+    topCustoms.forEach(([em, c]) => {
+      const row = document.createElement('div');
+      row.className = 'stat-row';
+      const pct = max > 0 ? (c / max * 100) : 0;
+      row.innerHTML = `
+        <div class="stat-emoji">${em}</div>
+        <div class="stat-bar-wrap">
+          <div class="stat-bar" style="width:${pct}%; background:${dotColor('custom')}"></div>
+        </div>
+        <div class="stat-count">${c}</div>
+      `;
+      body.appendChild(row);
+    });
+
+    // Streak + photo streak
+    const streak = currentStreak(data);
+    const photoStreak = currentPhotoStreak(data);
+    const streakBlock = document.createElement('div');
+    streakBlock.className = 'stats-streak';
+    streakBlock.innerHTML = `
+      <div>
+        <div class="stat-num">${daysLogged.size}</div>
+        <div class="stat-label">days logged</div>
+      </div>
+      <div>
+        <div class="stat-num">${streak}🔥</div>
+        <div class="stat-label">mood streak</div>
+      </div>
+      <div>
+        <div class="stat-num">${photoStreak}📷</div>
+        <div class="stat-label">photo streak</div>
+      </div>
+    `;
+    body.appendChild(streakBlock);
+  }
+
+  function currentStreak(data) {
+    return computeStreak(data, () => true);
+  }
+  function currentPhotoStreak(data) {
+    return computeStreak(data, entries => entries.some(e => e.photo));
+  }
+  function computeStreak(data, predicate) {
+    let streak = 0;
+    const d = new Date();
+    d.setHours(0,0,0,0);
+    let firstDay = true;
+    while (true) {
+      const k = dateKey(d);
+      const entries = data[k] || [];
+      if (entries.length > 0 && predicate(entries)) {
+        streak++;
+        d.setDate(d.getDate() - 1);
+        firstDay = false;
+      } else if (firstDay) {
+        // Today gets grace — the day isn't over yet
+        d.setDate(d.getDate() - 1);
+        firstDay = false;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  // ---- Onboarding ----
+  function applyName(n) {
+    document.getElementById('userName').textContent = n;
+  }
+  function showOnboarding() {
+    document.getElementById('onboardBg').classList.add('open');
+    setTimeout(() => document.getElementById('nameInput').focus(), 100);
+  }
+  document.getElementById('nameInput').addEventListener('input', (e) => {
+    document.getElementById('nameSave').disabled = e.target.value.trim().length === 0;
+  });
+  document.getElementById('nameInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      document.getElementById('nameSave').click();
+    }
+  });
+  document.getElementById('nameSave').addEventListener('click', () => {
+    const n = document.getElementById('nameInput').value.trim();
+    if (!n) return;
+    saveName(n);
+    applyName(n);
+    document.getElementById('onboardBg').classList.remove('open');
+  });
+
+  // ---- Daily quote ----
+  const QUOTES = [
+    { text: "You are braver than you believe, stronger than you seem, and smarter than you think.", who: "A. A. Milne" },
+    { text: "The future belongs to those who believe in the beauty of their dreams.", who: "Eleanor Roosevelt" },
+    { text: "It always seems impossible until it's done.", who: "Nelson Mandela" },
+    { text: "Be yourself; everyone else is already taken.", who: "Oscar Wilde" },
+    { text: "Why fit in when you were born to stand out?", who: "Dr. Seuss" },
+    { text: "Today you are you, that is truer than true. There is no one alive who is youer than you.", who: "Dr. Seuss" },
+    { text: "You don't have to be perfect to be amazing.", who: "Unknown" },
+    { text: "Little by little, a little becomes a lot.", who: "Tanzanian proverb" },
+    { text: "Even the longest journey begins with a single step.", who: "Lao Tzu" },
+    { text: "Whatever you are, be a good one.", who: "Abraham Lincoln" },
+    { text: "Difficult roads often lead to beautiful destinations.", who: "Zig Ziglar" },
+    { text: "She believed she could, so she did.", who: "R. S. Grey" },
+    { text: "Stars can't shine without darkness.", who: "Unknown" },
+    { text: "You are enough, just as you are.", who: "Meghan Markle" },
+    { text: "Don't let anyone dull your sparkle.", who: "Unknown" },
+    { text: "Mistakes are proof that you are trying.", who: "Unknown" },
+    { text: "The best way to predict the future is to create it.", who: "Abraham Lincoln" },
+    { text: "Doubt kills more dreams than failure ever will.", who: "Suzy Kassem" },
+    { text: "Comparison is the thief of joy.", who: "Theodore Roosevelt" },
+    { text: "What you do today can improve all your tomorrows.", who: "Ralph Marston" },
+    { text: "Kindness is a language that the deaf can hear and the blind can see.", who: "Mark Twain" },
+    { text: "Smile, it's free therapy.", who: "Douglas Horton" },
+    { text: "The waves of the sea help me get back to me.", who: "Jill Davis" },
+    { text: "The ocean stirs the heart, inspires the imagination, and brings eternal joy to the soul.", who: "Wyland" },
+    { text: "Be like the moon — just keep going through your phases.", who: "Unknown" },
+    { text: "You are allowed to be both a masterpiece and a work in progress.", who: "Sophia Bush" },
+    { text: "Happiness can be found even in the darkest of times, if one only remembers to turn on the light.", who: "Albus Dumbledore" },
+    { text: "It's okay to not be okay, as long as you don't stay that way.", who: "Unknown" },
+    { text: "Being kind to yourself is the bravest thing you can do.", who: "Unknown" },
+    { text: "Bloom where you are planted.", who: "Mary Engelbreit" }
+  ];
+
+  function renderQuote() {
+    const start = new Date(new Date().getFullYear(), 0, 0);
+    const diff = new Date() - start;
+    const dayOfYear = Math.floor(diff / 86400000);
+    const q = QUOTES[dayOfYear % QUOTES.length];
+    document.getElementById('quoteText').textContent = q.text;
+    document.getElementById('quoteAuthor').textContent = '— ' + q.who;
+  }
+
+  // ---- Init ----
+  renderTodayHeader();
+  renderQuote();
+  buildEmojiGrid();
+  renderCalendar();
+  renderStats();
+  const savedName = loadName();
+  if (savedName) {
+    applyName(savedName);
+  } else {
+    showOnboarding();
+  }
+</script>
+</body>
+</html>

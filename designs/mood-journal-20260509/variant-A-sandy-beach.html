@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mood Journal — Sandy Beach</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Nunito:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #F5E9D4;
+    color: #3D5468;
+    min-height: 100vh;
+    padding: 24px 20px 40px;
+    background-image:
+      radial-gradient(circle at 10% 5%, rgba(168, 213, 208, 0.25) 0%, transparent 30%),
+      radial-gradient(circle at 90% 95%, rgba(91, 143, 176, 0.15) 0%, transparent 35%);
+  }
+  .wave {
+    width: 100%;
+    height: 24px;
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+  .header { text-align: center; margin-bottom: 28px; }
+  .date {
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #5B8FB0;
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 28px;
+    line-height: 1.2;
+    color: #3D5468;
+  }
+  h1 em { font-style: italic; color: #5B8FB0; }
+  .moods {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .mood {
+    background: #FBF5E9;
+    border-radius: 28px;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 38px;
+    box-shadow: 0 4px 14px rgba(91, 143, 176, 0.12), inset 0 -2px 0 rgba(91, 143, 176, 0.06);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    border: none;
+  }
+  .mood:active { transform: scale(0.94); box-shadow: 0 2px 6px rgba(91, 143, 176, 0.15); }
+  .mood.selected {
+    background: #A8D5D0;
+    box-shadow: 0 6px 18px rgba(91, 143, 176, 0.25);
+  }
+  .calendar-card {
+    background: #FBF5E9;
+    border-radius: 24px;
+    padding: 24px 20px;
+    box-shadow: 0 4px 14px rgba(91, 143, 176, 0.1);
+  }
+  .cal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .cal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 500;
+    color: #3D5468;
+  }
+  .cal-arrows { display: flex; gap: 12px; color: #5B8FB0; font-size: 18px; }
+  .weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  .weekday {
+    text-align: center;
+    font-size: 11px;
+    color: #9AAFC0;
+    letter-spacing: 1px;
+  }
+  .days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #9AAFC0;
+    position: relative;
+  }
+  .day.empty { color: transparent; }
+  .day .dot {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FBF5E9;
+    font-weight: 600;
+    font-size: 11px;
+  }
+  .dot.happy   { background: #F4C95D; }
+  .dot.love    { background: #E8869B; }
+  .dot.calm    { background: #A8D5D0; }
+  .dot.meh     { background: #C8B89E; }
+  .dot.sad     { background: #5B8FB0; }
+  .dot.angry   { background: #C97B63; }
+  .day.today .dot { box-shadow: 0 0 0 2px #3D5468; }
+  .footer-tip {
+    text-align: center;
+    margin-top: 22px;
+    font-size: 12px;
+    color: #9AAFC0;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+  }
+</style>
+</head>
+<body>
+  <svg class="wave" viewBox="0 0 375 24" preserveAspectRatio="none">
+    <path d="M0,12 Q47,0 94,12 T188,12 T282,12 T375,12" stroke="#5B8FB0" stroke-width="1.5" fill="none"/>
+    <path d="M0,18 Q47,8 94,18 T188,18 T282,18 T375,18" stroke="#A8D5D0" stroke-width="1.2" fill="none"/>
+  </svg>
+
+  <div class="header">
+    <div class="date">Saturday · May 9</div>
+    <h1>How are you feeling, <em>Ania?</em></h1>
+  </div>
+
+  <div class="moods">
+    <button class="mood">😊</button>
+    <button class="mood selected">😍</button>
+    <button class="mood">😌</button>
+    <button class="mood">😐</button>
+    <button class="mood">😢</button>
+    <button class="mood">😡</button>
+  </div>
+
+  <div class="calendar-card">
+    <div class="cal-header">
+      <div class="cal-title">May 2026</div>
+      <div class="cal-arrows"><span>‹</span><span>›</span></div>
+    </div>
+    <div class="weekdays">
+      <div class="weekday">S</div><div class="weekday">M</div><div class="weekday">T</div>
+      <div class="weekday">W</div><div class="weekday">T</div><div class="weekday">F</div><div class="weekday">S</div>
+    </div>
+    <div class="days">
+      <div class="day empty">·</div><div class="day empty">·</div><div class="day empty">·</div><div class="day empty">·</div><div class="day empty">·</div>
+      <div class="day"><div class="dot happy">1</div></div>
+      <div class="day"><div class="dot calm">2</div></div>
+      <div class="day"><div class="dot love">3</div></div>
+      <div class="day"><div class="dot happy">4</div></div>
+      <div class="day"><div class="dot meh">5</div></div>
+      <div class="day"><div class="dot calm">6</div></div>
+      <div class="day"><div class="dot sad">7</div></div>
+      <div class="day"><div class="dot happy">8</div></div>
+      <div class="day today"><div class="dot love">9</div></div>
+      <div class="day">10</div><div class="day">11</div><div class="day">12</div><div class="day">13</div>
+      <div class="day">14</div><div class="day">15</div><div class="day">16</div><div class="day">17</div>
+      <div class="day">18</div><div class="day">19</div><div class="day">20</div><div class="day">21</div>
+      <div class="day">22</div><div class="day">23</div><div class="day">24</div><div class="day">25</div>
+      <div class="day">26</div><div class="day">27</div><div class="day">28</div><div class="day">29</div>
+      <div class="day">30</div><div class="day">31</div>
+    </div>
+  </div>
+
+  <div class="footer-tip">— a little wave for every day —</div>
+
+<script>
+  document.querySelectorAll('.mood').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.mood').forEach(x => x.classList.remove('selected'));
+      b.classList.add('selected');
+    });
+  });
+</script>
+</body>
+</html>
