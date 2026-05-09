@@ -4,6 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Mood Journal</title>
+
+<!-- App icon + home screen -->
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+
+<!-- Phone status bar styling -->
+<meta name="theme-color" content="#F5E9D4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mood Journal">
+<meta name="mobile-web-app-capable" content="yes">
+
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -529,6 +543,24 @@
     letter-spacing: 1px; text-transform: uppercase;
   }
 
+  /* Export */
+  .export-row {
+    display: flex; justify-content: center; gap: 10px;
+    margin-top: 18px;
+  }
+  .export-btn {
+    background: #FBF5E9;
+    border: 1px solid rgba(91, 143, 176, 0.2);
+    color: #5B8FB0;
+    border-radius: 16px;
+    padding: 10px 16px;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .export-btn:active { transform: scale(0.97); }
+
   /* ---- Onboarding modal ---- */
   .onboard-bg {
     position: fixed; inset: 0;
@@ -660,6 +692,10 @@
     <div class="stats-title">Your moods</div>
     <div class="stats-sub" id="statsSub">this month</div>
     <div id="statsBody"></div>
+  </div>
+
+  <div class="export-row">
+    <button class="export-btn" id="exportBtn">⬇ export my journal</button>
   </div>
 
   <div class="footer-tip">— a little wave for every day —</div>
@@ -1297,6 +1333,33 @@
     document.getElementById('quoteText').textContent = q.text;
     document.getElementById('quoteAuthor').textContent = '— ' + q.who;
   }
+
+  // ---- Export ----
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const data = load();
+    const name = loadName() || 'mood-journal';
+    const today = new Date().toISOString().slice(0, 10);
+    const payload = {
+      app: 'Mood Journal',
+      exportedAt: new Date().toISOString(),
+      name: name,
+      entries: data
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${name.toLowerCase().replace(/\s+/g, '-')}-mood-journal-${today}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    const btn = document.getElementById('exportBtn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ saved to downloads';
+    setTimeout(() => { btn.textContent = orig; }, 1800);
+  });
 
   // ---- Init ----
   renderTodayHeader();
