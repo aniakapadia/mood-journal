@@ -197,8 +197,9 @@
 
   .note-row {
     display: flex; gap: 10px; margin-bottom: 24px;
+    align-items: flex-end;         /* Save stays put as the note grows */
   }
-  .note-row input {
+  .note-row textarea {
     flex: 1;
     padding: 14px 16px;
     border-radius: 18px;
@@ -207,10 +208,16 @@
     color: #3D5468;
     font-family: inherit;
     font-size: 15px;
+    line-height: 1.45;
     box-shadow: 0 2px 8px rgba(91, 143, 176, 0.08);
     outline: none;
+    resize: none;                  /* height is managed as you type */
+    overflow-y: auto;
+    max-height: 40vh;
+    min-height: 50px;
+    display: block;
   }
-  .note-row input::placeholder { color: #B5C7D4; font-style: italic; }
+  .note-row textarea::placeholder { color: #B5C7D4; font-style: italic; }
   .note-row button {
     border: none;
     background: #5B8FB0;
@@ -446,6 +453,7 @@
   .bubble-text {
     font-size: 14px; color: #3D5468; line-height: 1.4;
     word-wrap: break-word;
+    white-space: pre-wrap;         /* keep the line breaks that were typed */
   }
   .bubble-text:empty::before {
     content: 'just a vibe ✦';
@@ -976,7 +984,7 @@
   </div>
 
   <div class="note-row">
-    <input id="noteInput" type="text" placeholder="add a note (optional)" maxlength="200">
+    <textarea id="noteInput" rows="1" placeholder="add a note (optional)" maxlength="2000"></textarea>
     <button id="saveBtn" disabled>Save</button>
   </div>
 
@@ -2839,6 +2847,19 @@
 
   bindStudioGestures();
 
+  // ---- Note field ----
+  // A textarea, not an <input>: an <input> silently flattens pasted line
+  // breaks, so anything with a blank line between paragraphs arrived as one
+  // run-on line. Height follows the content so a long paste is readable.
+  const noteEl = document.getElementById('noteInput');
+  function autoGrowNote() {
+    noteEl.style.height = 'auto';
+    noteEl.style.height = noteEl.scrollHeight + 'px';   // CSS max-height caps it
+  }
+  noteEl.addEventListener('input', autoGrowNote);
+  // On paste the value hasn't updated yet, so measure on the next tick.
+  noteEl.addEventListener('paste', () => setTimeout(autoGrowNote, 0));
+
   document.getElementById('saveBtn').addEventListener('click', async () => {
     if (!selectedMood) return;
     const btn = document.getElementById('saveBtn');
@@ -2876,7 +2897,8 @@
 
     // reset
     document.querySelectorAll('.mood').forEach(b => b.classList.remove('selected'));
-    document.getElementById('noteInput').value = '';
+    noteEl.value = '';
+    autoGrowNote();
     selectedMood = null;
     selectedCustomEmoji = null;
     document.getElementById('customPill').classList.remove('visible');

@@ -7,7 +7,8 @@ Built by Ania (age 12) with help from Claude.
 ## Features
 
 - Tap an emoji to log how you're feeling, multiple times a day
-- Optional note + photo with each entry (camera or library)
+- Optional note + photo with each entry (camera or library). Notes take proper
+  paragraphs — paste something with blank lines and the breaks are kept
 - **Live camera with face-tracked filters** — pick the filter first and watch
   it follow your face, then hit the shutter. 17 filters: dog, bunny, cat,
   freckles, blush, heart eyes, goofy gaze, rainbow, big grin, cool shades,
