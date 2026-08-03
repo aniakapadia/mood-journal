@@ -8,8 +8,10 @@ Built by Ania (age 12) with help from Claude.
 
 - Tap an emoji to log how you're feeling, multiple times a day
 - Optional note + photo with each entry (camera or library)
-- **Photo filters** — freckles, dog, smiley mouth, goofy gaze, bunny, cat,
-  heart eyes, cool shades, blush, flower crown, sparkles and a disguise
+- **Live camera with face-tracked filters** — pick the filter first and watch
+  it follow your face, then hit the shutter. 17 filters: dog, bunny, cat,
+  freckles, blush, heart eyes, goofy gaze, rainbow, big grin, cool shades,
+  flower crown, deer, angel, devil, butterflies, sparkles and a disguise
 - Calendar coloured by mood — six shades of blue + custom emojis
 - Tap any day to see all your entries as chat bubbles with timestamps
 - Daily inspirational quote
@@ -39,6 +41,29 @@ everything else. A compressed photo is ~200KB of base64 and iOS Safari caps
 "✓ saved" while the entry vanished — and because it was always the newest days
 that failed, both streaks read 0. Photos now live in IndexedDB and
 `localStorage` only holds the small text index.
+
+### How the filters track your face
+
+Tapping **take photo** opens a live camera inside the app, so the filter is
+chosen and previewed before the shutter — not applied afterwards.
+
+Face tracking uses MediaPipe's 478-point face mesh, loaded lazily the first
+time the camera opens (~2.7MB, then cached). The journal itself never waits on
+it and still works completely offline.
+
+Every filter is drawn with canvas paths — no image assets — positioned from
+*measured* landmarks: iris centres, nose tip, mouth corners, jaw and hairline.
+Proportions were calibrated against the real mesh rather than guessed, which is
+why things line up (eyes sit at −0.205 × face height from centre, mouth width
+is 0.53 × face width). Filters also react: the dog's tongue lolls further as
+you open your mouth, and the rainbow pours out when you do.
+
+Detection is throttled and decoupled from rendering — the overlay redraws every
+frame from the last known landmarks, smoothed with a low-pass filter, so the
+preview stays fluid even when inference is slower than the display.
+
+If the model can't load, or a library photo has no detectable face, everything
+falls back to a draggable oval you position by hand.
 
 ### Signing in
 
