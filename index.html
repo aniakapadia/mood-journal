@@ -18,12 +18,13 @@
 <meta name="apple-mobile-web-app-title" content="Mood Journal">
 <meta name="mobile-web-app-capable" content="yes">
 
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { overscroll-behavior: none; }
   body {
-    font-family: 'Nunito', sans-serif;
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-weight: 700;
     background: #F5E9D4;
     color: #3D5468;
     min-height: 100vh;
@@ -49,14 +50,14 @@
     content: '“';
     position: absolute;
     top: -10px; left: 12px;
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Libre Baskerville', Georgia, serif;
     font-size: 70px;
     color: rgba(91, 143, 176, 0.2);
     line-height: 1;
   }
   .quote-text {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 17px;
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-size: 15px;
     font-style: italic;
     color: #2C4A63;
     line-height: 1.4;
@@ -79,8 +80,8 @@
     color: #5B8FB0; margin-bottom: 8px;
   }
   h1 {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 500; font-size: 28px; line-height: 1.2;
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-weight: 700; font-size: 23px; line-height: 1.25;
   }
   h1 em { font-style: italic; color: #5B8FB0; }
 
@@ -188,7 +189,7 @@
   .emoji-grid button:active { transform: scale(0.92); background: #A8D5D0; }
   .emoji-section-title {
     grid-column: 1 / -1;
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Libre Baskerville', Georgia, serif;
     font-size: 16px;
     color: #5B8FB0;
     margin-top: 8px;
@@ -225,7 +226,7 @@
     border-radius: 18px;
     padding: 0 18px;
     font-family: inherit;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 14px;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(91, 143, 176, 0.3);
@@ -309,8 +310,8 @@
     margin-bottom: 18px;
   }
   .cal-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 22px; font-weight: 500;
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-size: 19px; font-weight: 700;
   }
   .cal-arrows { display: flex; gap: 18px; color: #5B8FB0; font-size: 22px; cursor: pointer; user-select: none; }
   .cal-arrows span { padding: 0 6px; cursor: pointer; }
@@ -325,7 +326,7 @@
   .day {
     aspect-ratio: 1;
     display: flex; align-items: center; justify-content: center;
-    font-size: 12px; color: #9AAFC0;
+    font-size: 11px; color: #9AAFC0;
     position: relative;
     cursor: pointer;
     border-radius: 50%;
@@ -335,7 +336,7 @@
     width: 30px; height: 30px;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    color: #FBF5E9; font-weight: 600; font-size: 11px;
+    color: #FBF5E9; font-weight: 700; font-size: 10px;
     transition: transform 0.15s ease;
   }
   .day:active .dot { transform: scale(0.9); }
@@ -405,8 +406,8 @@
     border-bottom: 1px solid rgba(91, 143, 176, 0.15);
   }
   .modal-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 22px; font-weight: 500;
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-size: 19px; font-weight: 700;
   }
   .modal-close {
     width: 32px; height: 32px;
@@ -424,7 +425,7 @@
   }
   .bubble-empty {
     text-align: center; color: #9AAFC0; font-style: italic;
-    font-family: 'Cormorant Garamond', serif; font-size: 16px;
+    font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px;
     padding: 32px 0;
   }
   .bubble {
@@ -486,7 +487,7 @@
   .footer-tip {
     text-align: center; margin-top: 22px;
     font-size: 12px; color: #9AAFC0;
-    font-style: italic; font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-family: 'Libre Baskerville', Georgia, serif;
   }
 
   /* ---- Stats card ---- */
@@ -498,8 +499,8 @@
     margin-top: 18px;
   }
   .stats-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 22px; font-weight: 500;
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-size: 19px; font-weight: 700;
     margin-bottom: 4px;
   }
   .stats-sub {
@@ -530,10 +531,10 @@
     border-radius: 4px; overflow: hidden;
   }
   .stat-bar { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
-  .stat-count { width: 32px; text-align: right; color: #5B8FB0; font-weight: 600; }
+  .stat-count { width: 32px; text-align: right; color: #5B8FB0; font-weight: 700; }
   .stats-empty {
     text-align: center; color: #9AAFC0; font-style: italic;
-    font-family: 'Cormorant Garamond', serif; font-size: 16px;
+    font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px;
     padding: 18px 0 4px;
   }
   .stats-streak {
@@ -543,8 +544,8 @@
     text-align: center;
   }
   .stats-streak .stat-num {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 28px; font-weight: 600; color: #3D5468;
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-size: 24px; font-weight: 700; color: #3D5468;
   }
   .stats-streak .stat-label {
     font-size: 11px; color: #9AAFC0;
@@ -589,8 +590,8 @@
   }
   .onboard-emoji { font-size: 48px; margin-bottom: 8px; }
   .onboard h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 500; font-size: 26px; margin-bottom: 6px;
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-weight: 700; font-size: 22px; margin-bottom: 6px;
   }
   .onboard p {
     color: #5B8FB0; font-size: 14px; margin-bottom: 20px;
@@ -616,7 +617,7 @@
     border-radius: 18px;
     padding: 14px;
     font-family: inherit;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 15px;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(91, 143, 176, 0.3);
@@ -650,7 +651,7 @@
     padding: 7px 14px;
     font-family: inherit;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
   }
   .cloud-action:active { transform: scale(0.96); }
