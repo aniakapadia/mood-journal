@@ -20,7 +20,8 @@ Built by Ania (age 12) with help from Claude.
 - Custom emoji picker for any feeling that doesn't fit the six defaults
 - Works offline and saves to your phone — an account is optional
 - **Sign in with an emailed code** to sync across devices
-- Export and restore your whole journal as one file
+- **Settings** (⚙ in the top bar) to change your name, and to export or restore
+  your whole journal as one file
 
 ## How it works
 

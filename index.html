@@ -660,6 +660,89 @@
     box-shadow: inset 0 0 0 1px rgba(91, 143, 176, 0.35);
   }
 
+  .settings-btn {
+    border: none;
+    background: transparent;
+    color: #5B8FB0;
+    font-size: 18px;
+    line-height: 1;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    flex: none;
+  }
+  .settings-btn:active { transform: scale(0.92); background: rgba(91, 143, 176, 0.12); }
+
+  /* ---- Settings sheet ---- */
+  .settings-bg {
+    position: fixed; inset: 0;
+    background: rgba(44, 74, 99, 0.55);
+    backdrop-filter: blur(5px);
+    display: none; align-items: flex-end; justify-content: center;
+    z-index: 205;
+  }
+  .settings-bg.open { display: flex; animation: fadein 0.2s ease; }
+  .settings {
+    background: #F5E9D4;
+    width: 100%; max-width: 500px;
+    max-height: 88vh;
+    overflow-y: auto;
+    border-radius: 28px 28px 0 0;
+    padding: 20px 20px max(26px, env(safe-area-inset-bottom));
+    animation: slideup 0.25s ease;
+  }
+  .setting-group {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(91, 143, 176, 0.16);
+  }
+  /* the header is also a div, so :first-of-type would match that instead */
+  .settings .modal-header + .setting-group {
+    border-top: none; padding-top: 4px; margin-top: 8px;
+  }
+  .setting-label {
+    font-size: 10.5px; letter-spacing: 1.6px; text-transform: uppercase;
+    color: #5B8FB0; margin-bottom: 10px;
+  }
+  .setting-row { display: flex; gap: 10px; }
+  .setting-row input {
+    flex: 1;
+    padding: 14px 16px;
+    border-radius: 16px; border: none;
+    background: #FBF5E9; color: #3D5468;
+    font-family: inherit; font-size: 16px;
+    outline: none;
+  }
+  .setting-row input::placeholder { color: #B5C7D4; font-style: italic; }
+  .setting-row button {
+    border: none;
+    background: #5B8FB0; color: #FBF5E9;
+    border-radius: 16px; padding: 0 20px;
+    font-family: inherit; font-size: 14px; font-weight: 700;
+    cursor: pointer; flex: none;
+  }
+  .setting-row button:active { transform: scale(0.96); }
+  .setting-row button:disabled { opacity: 0.5; }
+  .setting-btn {
+    width: 100%;
+    background: #FBF5E9;
+    border: 1px solid rgba(91, 143, 176, 0.2);
+    color: #5B8FB0;
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    font-family: inherit; font-size: 13.5px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .setting-btn:active { transform: scale(0.98); }
+  .setting-btn:disabled { opacity: 0.6; }
+  .setting-hint {
+    font-size: 11.5px; line-height: 1.5; color: #8FA8BC; margin-top: 8px;
+  }
+  .setting-hint.ok  { color: #4E8C5E; }
+  .setting-hint.err { color: #C97B63; }
+
   .storage-warn {
     display: none;
     background: rgba(201, 123, 99, 0.14);
@@ -952,6 +1035,7 @@
     <span class="cloud-dot" id="cloudDot"></span>
     <span class="cloud-text" id="cloudText">saved on this phone only</span>
     <button class="cloud-action" id="cloudAction">sign in</button>
+    <button class="settings-btn" id="settingsBtn" aria-label="settings" title="settings">⚙</button>
   </div>
 
   <div class="storage-warn" id="storageWarn">
@@ -1031,9 +1115,7 @@
   </div>
 
   <div class="export-row">
-    <button class="export-btn" id="exportBtn">⬇ export my journal</button>
-    <button class="export-btn" id="importBtn">⬆ restore from a file</button>
-    <input type="file" id="importInput" accept="application/json,.json">
+    <button class="export-btn" id="settingsBtnBottom">⚙ settings &amp; backup</button>
   </div>
 
   <div class="footer-tip">— a little wave for every day —</div>
@@ -1106,6 +1188,44 @@
       </div>
       <div class="filter-chips" id="filterChips"></div>
       <button class="studio-use" id="studioUse">use this photo ✨</button>
+    </div>
+  </div>
+
+  <!-- Settings sheet -->
+  <div class="settings-bg" id="settingsBg">
+    <div class="settings">
+      <div class="modal-header">
+        <div class="modal-title">settings</div>
+        <button class="modal-close" id="settingsClose">×</button>
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-label">your name</div>
+        <div class="setting-row">
+          <input id="settingsName" type="text" maxlength="20" placeholder="your name"
+                 autocomplete="off" spellcheck="false">
+          <button id="settingsNameSave">save</button>
+        </div>
+        <div class="setting-hint" id="settingsNameMsg">
+          this is the name in “How are you feeling, …?”
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-label">your journal</div>
+        <button class="setting-btn" id="exportBtn">⬇ export my journal</button>
+        <button class="setting-btn" id="importBtn">⬆ restore from a file</button>
+        <input type="file" id="importInput" accept="application/json,.json">
+        <div class="setting-hint">
+          export saves one file with every entry and photo inside it.
+          restore merges a file back in — nothing already here gets deleted.
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-label">about</div>
+        <div class="setting-hint" id="settingsAbout">a little wave for every day 🌊</div>
+      </div>
     </div>
   </div>
 
@@ -3268,6 +3388,53 @@
     }
     return best;
   }
+
+  // ---- Settings ----
+  function openSettings() {
+    const input = document.getElementById('settingsName');
+    input.value = loadName() || '';
+    setNameMsg('this is the name in “How are you feeling, …?”');
+
+    const data = load();
+    const days = Object.keys(data).filter(k => liveEntries(data, k).length).length;
+    const entries = Object.keys(data).reduce((n, k) => n + liveEntries(data, k).length, 0);
+    const photos = Object.keys(data).reduce((n, k) => n + liveEntries(data, k).filter(hasPhoto).length, 0);
+    document.getElementById('settingsAbout').textContent =
+      entries === 0
+        ? 'a little wave for every day 🌊'
+        : `${entries} ${entries === 1 ? 'entry' : 'entries'} across ${days} ${days === 1 ? 'day' : 'days'} · ${photos} ${photos === 1 ? 'photo' : 'photos'} 🌊`;
+
+    document.getElementById('settingsBg').classList.add('open');
+  }
+  function closeSettings() {
+    document.getElementById('settingsBg').classList.remove('open');
+  }
+  function setNameMsg(text, kind) {
+    const el = document.getElementById('settingsNameMsg');
+    el.textContent = text;
+    el.className = 'setting-hint' + (kind ? ' ' + kind : '');
+  }
+
+  document.getElementById('settingsBtn').addEventListener('click', openSettings);
+  document.getElementById('settingsBtnBottom').addEventListener('click', openSettings);
+  document.getElementById('settingsClose').addEventListener('click', closeSettings);
+  document.getElementById('settingsBg').addEventListener('click', e => {
+    if (e.target.id === 'settingsBg') closeSettings();
+  });
+
+  function saveNewName() {
+    const input = document.getElementById('settingsName');
+    const n = input.value.trim();
+    if (!n) return setNameMsg('type a name first', 'err');
+    saveName(n);
+    applyName(n);
+    setNameMsg('saved — you\'re ' + n + ' now ✨', 'ok');
+    queueSync();   // the name lives in the cloud profile too
+  }
+  document.getElementById('settingsNameSave').addEventListener('click', saveNewName);
+  document.getElementById('settingsName').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); saveNewName(); }
+  });
 
   // ---- Onboarding ----
   function applyName(n) {
