@@ -755,6 +755,32 @@
     line-height: 1.45;
   }
   .storage-warn.visible { display: block; }
+  /* signed in: informational rather than a problem */
+  .storage-warn.calm {
+    background: rgba(91, 143, 176, 0.12);
+    color: #3D5468;
+  }
+  .warn-actions {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .warn-btn {
+    border: none;
+    background: #C97B63;
+    color: #FFF7F2;
+    border-radius: 12px;
+    padding: 9px 14px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .warn-btn:active { transform: scale(0.96); }
+  .warn-btn.ghost {
+    background: transparent;
+    color: #8E4A34;
+    box-shadow: inset 0 0 0 1px rgba(142, 74, 52, 0.35);
+  }
 
   /* ---- Live camera ---- */
   .cam-bg {
@@ -1400,19 +1426,68 @@
     return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
   }
 
+  function isQuotaError(err) {
+    if (!err) return false;
+    const n = err.name || '';
+    return n === 'QuotaExceededError' || n === 'NS_ERROR_DOM_QUOTA_REACHED' || err.code === 22;
+  }
+
+  // How full the device is — when the browser is willing to say.
+  async function storagePressure() {
+    try {
+      if (!navigator.storage || !navigator.storage.estimate) return null;
+      const { usage, quota } = await navigator.storage.estimate();
+      if (!quota) return null;
+      return { usage, quota, ratio: usage / quota };
+    } catch { return null; }
+  }
+
+  // Signed in means every photo also exists in the cloud, so the local blobs
+  // are only a cache — drop the oldest to make room. Their photoPath stays, so
+  // they download again the next time that day is opened.
+  async function evictUploadedPhotos(count) {
+    const data = load();
+    const uploaded = [];
+    for (const entries of Object.values(data)) {
+      for (const e of entries) if (e.photoId && e.photoPath) uploaded.push(e);
+    }
+    if (!uploaded.length) return 0;
+    uploaded.sort((a, b) => Date.parse(a.time) - Date.parse(b.time));   // oldest first
+    let freed = 0;
+    for (const e of uploaded.slice(0, count)) {
+      const cached = photoUrlCache.get(e.photoId);
+      if (cached) { URL.revokeObjectURL(cached); photoUrlCache.delete(e.photoId); }
+      try { await idbRun('readwrite', s => s.delete(e.photoId)); freed++; } catch {}
+      delete e.photoId;
+    }
+    if (freed) save(data);
+    return freed;
+  }
+
   async function putPhoto(blob) {
     const id = newId('ph');
+    const write = () => idbRun('readwrite', s => s.put({ id, blob, createdAt: Date.now() }));
     try {
-      await idbRun('readwrite', s => s.put({ id, blob, createdAt: Date.now() }));
-    } catch (e) {
+      await write();
+      checkPhotoSpace();                       // heads-up before it becomes a problem
+      return id;
+    } catch (err) {
+      if (isQuotaError(err) && getSession()) {
+        const freed = await evictUploadedPhotos(12);
+        if (freed) {
+          try { await write(); return id; } catch (retryErr) { err = retryErr; }
+        }
+      }
       // A photo kept only in memory is gone the moment the tab closes, so say
       // so loudly rather than pretending the save worked.
-      console.error('IndexedDB unavailable — photo is in memory only', e);
+      console.error('could not store photo', err);
       photoMemoryFallback.set(id, blob);
-      warnPhotoStoreBroken();
+      if (isQuotaError(err)) showPhotoSpaceWarning(true);
+      else warnPhotoStoreBroken();
+      return id;
     }
-    return id;
   }
+
   let photoWarned = false;
   function warnPhotoStoreBroken() {
     if (photoWarned) return;
@@ -1420,10 +1495,58 @@
     const el = document.getElementById('storageWarn');
     if (el) {
       el.innerHTML = "⚠️ This phone won't let the app store photos right now. " +
-        "Your moods are safe, but photos may not survive a reload — " +
-        "tap <strong>export my journal</strong> at the bottom to keep a copy.";
+        "Your moods are safe, but photos may not survive a reload — open " +
+        "<strong>settings</strong> and export a backup to keep a copy.";
       el.classList.add('visible');
     }
+  }
+
+  // Running out of room matters far more when signed out: there is no cloud
+  // copy, so a photo that won't fit is simply lost. Signed in, it's a caching
+  // detail worth mentioning but nothing is at risk.
+  let photoSpaceWarned = false;
+  function showPhotoSpaceWarning(full) {
+    const el = document.getElementById('storageWarn');
+    if (!el) return;
+    if (photoSpaceWarned && !full) return;     // a real failure always re-announces
+    photoSpaceWarned = true;
+
+    if (getSession()) {
+      el.innerHTML = full
+        ? "📷 This phone is out of room for photos — but you're signed in, so " +
+          "they're safe in the cloud. Older ones reload when you open that day."
+        : "📷 This phone is running low on room for photos. You're signed in, " +
+          "so they're backed up to the cloud.";
+      el.className = 'storage-warn visible calm';
+    } else {
+      el.innerHTML =
+        (full
+          ? "⚠️ <strong>This phone is out of room — that photo may not be saved.</strong> "
+          : "⚠️ <strong>This phone is nearly out of room for photos.</strong> ") +
+        "You're not signed in, so photos only live on this phone." +
+        '<span class="warn-actions">' +
+        '<button type="button" class="warn-btn" id="warnSignIn">sign in to save photos</button>' +
+        '<button type="button" class="warn-btn ghost" id="warnExport">export a backup</button>' +
+        '</span>';
+      el.className = 'storage-warn visible';
+      const signIn = el.querySelector('#warnSignIn');
+      const exportBtn = el.querySelector('#warnExport');
+      if (signIn) signIn.addEventListener('click', () => document.getElementById('cloudAction').click());
+      if (exportBtn) exportBtn.addEventListener('click', () => {
+        openSettings();
+        setTimeout(() => document.getElementById('exportBtn').click(), 400);
+      });
+    }
+  }
+
+  let spaceCheckedAt = 0;
+  async function checkPhotoSpace() {
+    if (Date.now() - spaceCheckedAt < 30000) return;
+    spaceCheckedAt = Date.now();
+    const p = await storagePressure();
+    if (!p) return;
+    // Warn earlier when signed out, since nothing else is holding the photos.
+    if (p.ratio >= (getSession() ? 0.95 : 0.85)) showPhotoSpaceWarning(false);
   }
   async function getPhoto(id) {
     if (photoMemoryFallback.has(id)) return photoMemoryFallback.get(id);
@@ -3990,6 +4113,8 @@
     if (savedName) applyName(savedName);
     else showOnboarding();
     initCloud();
+    // Tell a returning user they're low on room before they try to add a photo.
+    checkPhotoSpace();
   })();
 </script>
 </body>
