@@ -1,0 +1,8 @@
+# Secrets — never commit. This repo is public.
+.env
+.env.*
+!.env.example
+
+.vercel
+.DS_Store
+node_modules/

@@ -614,6 +614,227 @@
     box-shadow: 0 4px 12px rgba(91, 143, 176, 0.3);
   }
   .onboard button:disabled { opacity: 0.4; box-shadow: none; }
+  /* ---- Cloud / sign-in bar ---- */
+  .cloud-bar {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(251, 245, 233, 0.7);
+    border-radius: 16px;
+    padding: 8px 8px 8px 14px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: #5B8FB0;
+  }
+  .cloud-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #C9B79C; flex: none;
+    transition: background 0.25s ease;
+  }
+  .cloud-dot.on   { background: #7FBF8F; }
+  .cloud-dot.busy { background: #E8C07A; animation: pulse 1s ease-in-out infinite; }
+  .cloud-dot.err  { background: #C97B63; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .cloud-text { flex: 1; }
+  .cloud-action {
+    border: none;
+    background: #5B8FB0;
+    color: #FBF5E9;
+    border-radius: 12px;
+    padding: 7px 14px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .cloud-action:active { transform: scale(0.96); }
+  .cloud-action.ghost {
+    background: transparent;
+    color: #5B8FB0;
+    box-shadow: inset 0 0 0 1px rgba(91, 143, 176, 0.35);
+  }
+
+  .storage-warn {
+    display: none;
+    background: rgba(201, 123, 99, 0.14);
+    color: #8E4A34;
+    border-radius: 16px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+  .storage-warn.visible { display: block; }
+
+  /* ---- Filter studio ---- */
+  .studio-bg {
+    position: fixed; inset: 0;
+    background: rgba(44, 74, 99, 0.6);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: flex-end; justify-content: center;
+    z-index: 200;
+  }
+  .studio-bg.open { display: flex; animation: fadein 0.2s ease; }
+  .studio {
+    background: #F5E9D4;
+    width: 100%; max-width: 500px;
+    max-height: 94vh;
+    border-radius: 28px 28px 0 0;
+    padding: 18px 18px 24px;
+    display: flex; flex-direction: column; gap: 12px;
+    animation: slideup 0.25s ease;
+  }
+  .studio-stage {
+    flex: 1;
+    min-height: 220px;
+    max-height: 46vh;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(61, 84, 104, 0.08);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  #studioCanvas {
+    border-radius: 12px;
+    touch-action: none;      /* we handle pan/pinch ourselves */
+    cursor: grab;
+    display: block;
+  }
+  #studioCanvas:active { cursor: grabbing; }
+  .studio-hint {
+    font-size: 11.5px; color: #5B8FB0; text-align: center; font-style: italic;
+  }
+  .studio-size-row {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 10px; color: #5B8FB0; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .studio-size-row input[type=range] {
+    flex: 1; accent-color: #5B8FB0; height: 22px;
+  }
+  #studioReset {
+    border: none; background: #FBF5E9; color: #5B8FB0;
+    width: 30px; height: 30px; border-radius: 50%;
+    font-size: 15px; cursor: pointer; flex: none;
+  }
+  .filter-chips {
+    display: flex; gap: 8px;
+    overflow-x: auto;
+    padding: 2px 2px 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .filter-chip {
+    flex: none;
+    background: #FBF5E9;
+    border: none;
+    border-radius: 16px;
+    padding: 8px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-family: inherit; font-size: 10.5px; color: #5B8FB0;
+    cursor: pointer; min-width: 62px;
+    box-shadow: 0 2px 6px rgba(91, 143, 176, 0.1);
+  }
+  .filter-chip .chip-icon { font-size: 22px; }
+  .filter-chip.active {
+    background: #A8D5D0; color: #2C4A63; font-weight: 700;
+    box-shadow: 0 4px 12px rgba(91, 143, 176, 0.25);
+  }
+  .filter-chip:active { transform: scale(0.95); }
+  .studio-use {
+    border: none;
+    background: #5B8FB0; color: #FBF5E9;
+    border-radius: 18px; padding: 15px;
+    font-family: inherit; font-size: 15px; font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(91, 143, 176, 0.35);
+  }
+  .studio-use:active { transform: scale(0.98); }
+
+  /* ---- Photo in a day bubble ---- */
+  .bubble-photo-wrap { position: relative; display: block; margin-top: 8px; }
+  .bubble-filter-tag {
+    position: absolute; left: 8px; bottom: 8px;
+    background: rgba(44, 74, 99, 0.66);
+    color: #FBF5E9;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    backdrop-filter: blur(3px);
+  }
+  .bubble-photo-missing {
+    margin-top: 8px; padding: 14px;
+    background: rgba(91, 143, 176, 0.08);
+    border-radius: 12px;
+    font-size: 11.5px; font-style: italic; color: #9FB4C4; text-align: center;
+  }
+
+  .photo-streak-note {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(91, 143, 176, 0.14);
+    font-size: 11.5px;
+    color: #5B8FB0;
+    text-align: center;
+  }
+  .photo-streak-note strong { color: #2C4A63; }
+
+  #importInput { display: none; }
+
+  /* ---- Sign-in sheet ---- */
+  .auth-bg {
+    position: fixed; inset: 0;
+    background: rgba(44, 74, 99, 0.55);
+    backdrop-filter: blur(5px);
+    display: none; align-items: flex-end; justify-content: center;
+    z-index: 210;
+  }
+  .auth-bg.open { display: flex; animation: fadein 0.2s ease; }
+  .auth {
+    background: #F5E9D4;
+    width: 100%; max-width: 500px;
+    border-radius: 28px 28px 0 0;
+    padding: 20px 20px 30px;
+    animation: slideup 0.25s ease;
+  }
+  .auth-copy {
+    font-size: 13px; line-height: 1.5; color: #5B8FB0; margin-bottom: 16px;
+  }
+  .auth input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 16px; border: none;
+    background: #FBF5E9; color: #3D5468;
+    font-family: inherit; font-size: 16px;
+    outline: none; margin-bottom: 10px;
+  }
+  .auth input::placeholder { color: #B5C7D4; font-style: italic; }
+  .auth button {
+    width: 100%;
+    border: none; background: #5B8FB0; color: #FBF5E9;
+    border-radius: 16px; padding: 15px;
+    font-family: inherit; font-size: 15px; font-weight: 700;
+    cursor: pointer;
+  }
+  .auth button:disabled { opacity: 0.55; }
+  .auth-msg {
+    margin-top: 12px; font-size: 12.5px; line-height: 1.45;
+    color: #5B8FB0; text-align: center; min-height: 18px;
+  }
+  .auth-msg.ok  { color: #4E8C5E; }
+  .auth-msg.err { color: #C97B63; }
+  .auth-back {
+    background: transparent !important;
+    color: #5B8FB0 !important;
+    font-weight: 400 !important;
+    font-size: 12.5px !important;
+    padding: 10px !important;
+    margin-top: 4px;
+  }
+  #authCode {
+    text-align: center;
+    letter-spacing: 8px;
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  #authCode::placeholder { letter-spacing: 8px; color: #D5DFE7; font-style: normal; }
 </style>
 </head>
 <body>
@@ -622,6 +843,17 @@
     <path d="M0,12 Q47,0 94,12 T188,12 T282,12 T375,12" stroke="#5B8FB0" stroke-width="1.5" fill="none"/>
     <path d="M0,18 Q47,8 94,18 T188,18 T282,18 T375,18" stroke="#A8D5D0" stroke-width="1.2" fill="none"/>
   </svg>
+
+  <div class="cloud-bar" id="cloudBar">
+    <span class="cloud-dot" id="cloudDot"></span>
+    <span class="cloud-text" id="cloudText">saved on this phone only</span>
+    <button class="cloud-action" id="cloudAction">sign in</button>
+  </div>
+
+  <div class="storage-warn" id="storageWarn">
+    ⚠️ This phone's storage is full. Tap <strong>export my journal</strong> at the
+    bottom to save a backup file right now.
+  </div>
 
   <div class="header">
     <div class="date" id="todayDate">—</div>
@@ -657,7 +889,7 @@
     <button class="photo-btn photo-btn-library" id="libraryBtn">🖼️ from library</button>
     <div class="photo-preview" id="photoPreview">
       <img id="photoThumb" alt="preview">
-      <div class="label">photo ready ✨</div>
+      <div class="label" id="photoFilterTag">photo ready ✨</div>
       <button class="remove" id="photoRemove">×</button>
     </div>
     <input type="file" id="cameraInput" accept="image/*" capture="environment">
@@ -696,6 +928,8 @@
 
   <div class="export-row">
     <button class="export-btn" id="exportBtn">⬇ export my journal</button>
+    <button class="export-btn" id="importBtn">⬆ restore from a file</button>
+    <input type="file" id="importInput" accept="application/json,.json">
   </div>
 
   <div class="footer-tip">— a little wave for every day —</div>
@@ -733,8 +967,66 @@
     </div>
   </div>
 
+  <!-- Filter studio -->
+  <div class="studio-bg" id="studioBg">
+    <div class="studio">
+      <div class="modal-header">
+        <div class="modal-title">add a filter</div>
+        <button class="modal-close" id="studioCancel">×</button>
+      </div>
+      <div class="studio-stage">
+        <canvas id="studioCanvas"></canvas>
+      </div>
+      <div class="studio-hint">drag the dotted oval onto your face · pinch to resize &amp; tilt</div>
+      <div class="studio-size-row">
+        <span>small</span>
+        <input type="range" id="studioSize" min="40" max="1400" value="300">
+        <span>big</span>
+        <button id="studioReset" title="reset position">↺</button>
+      </div>
+      <div class="filter-chips" id="filterChips"></div>
+      <button class="studio-use" id="studioUse">use this photo ✨</button>
+    </div>
+  </div>
+
+  <!-- Sign-in sheet -->
+  <div class="auth-bg" id="authBg">
+    <div class="auth">
+      <div class="modal-header">
+        <div class="modal-title" id="authTitle">save to the cloud</div>
+        <button class="modal-close" id="authClose">×</button>
+      </div>
+
+      <div id="authStepEmail">
+        <p class="auth-copy">
+          Pop in your email and we'll send you a code. Type it in and your
+          journal starts syncing to every device.
+          <strong>Nothing on this phone gets deleted</strong> — everything
+          already here gets uploaded and kept.
+        </p>
+        <input id="authEmail" type="email" inputmode="email" autocomplete="email"
+               placeholder="your email" autocapitalize="off" spellcheck="false">
+        <button id="authSend">email me a code</button>
+      </div>
+
+      <div id="authStepCode" hidden>
+        <p class="auth-copy">
+          We sent a code to <strong id="authSentTo"></strong>.
+          Check the inbox and type the 8 digits below.
+        </p>
+        <input id="authCode" type="text" inputmode="numeric" autocomplete="one-time-code"
+               maxlength="8" placeholder="12345678" spellcheck="false">
+        <button id="authVerify">sign me in</button>
+        <button class="auth-back" id="authBack">use a different email</button>
+      </div>
+
+      <div class="auth-msg" id="authMsg"></div>
+    </div>
+  </div>
+
 <script>
-  const STORAGE_KEY = 'mood-journal-entries-v1';
+  const STORAGE_KEY = 'mood-journal-entries-v2';
+  const LEGACY_KEY  = 'mood-journal-entries-v1';   // kept forever as a safety net
   const NAME_KEY = 'mood-journal-name-v1';
   const MOOD_EMOJI = {
     happy: '😊', joy: '😄', calm: '😌',
@@ -750,8 +1042,23 @@
     custom: '#E8DBC2'
   };
 
-  // ---- Storage with in-memory fallback (in case localStorage is sandboxed) ----
+  // ---- Storage ----
+  //
+  // Photos used to live as base64 dataURLs inside the same localStorage blob as
+  // everything else. A compressed camera photo is ~200KB of base64, and iOS
+  // Safari caps localStorage at 5MB — so from roughly the 24th photo onward
+  // every single save threw QuotaExceededError. The old code swallowed that
+  // error and wrote to an in-memory object that nothing ever read back, so the
+  // app said "✓ saved" while the entry evaporated. Because it was always the
+  // NEWEST days that failed, both streaks read 0.
+  //
+  // Now: photos are Blobs in IndexedDB (gigabytes available, and blobs are ~25%
+  // smaller than base64). localStorage only holds the small text index, which
+  // stays a few KB even after years of journalling.
+
   let memoryStore = {};
+  let storageWarned = false;
+
   function lsAvailable() {
     try {
       localStorage.setItem('__t', '1');
@@ -760,26 +1067,246 @@
     } catch { return false; }
   }
   const HAS_LS = lsAvailable();
+
+  // Reads fall back to memoryStore whenever localStorage has nothing for the
+  // key — so a write that had to go to memory is still visible on read.
   function readKey(key) {
     if (HAS_LS) {
-      try { return localStorage.getItem(key); } catch { return memoryStore[key] || null; }
+      try {
+        const v = localStorage.getItem(key);
+        if (v !== null) return v;
+      } catch {}
     }
     return memoryStore[key] || null;
   }
   function writeKey(key, value) {
-    if (HAS_LS) {
-      try { localStorage.setItem(key, value); return; } catch {}
-    }
     memoryStore[key] = value;
+    if (HAS_LS) {
+      try { localStorage.setItem(key, value); return true; }
+      catch (e) { warnStorageFull(); return false; }
+    }
+    return false;
+  }
+  function warnStorageFull() {
+    if (storageWarned) return;
+    storageWarned = true;
+    console.warn('localStorage is full — journal text kept in memory for this session.');
+    const el = document.getElementById('storageWarn');
+    if (el) el.classList.add('visible');
   }
 
-  // entries: { 'YYYY-MM-DD': [ { mood, note, time (ISO) }, ... ] }
+  // ---- Photo blobs live in IndexedDB ----
+  const DB_NAME = 'mood-journal';
+  const PHOTO_STORE = 'photos';
+  const photoMemoryFallback = new Map();
+  let dbPromise = null;
+
+  function openDB() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise((resolve, reject) => {
+      let req;
+      // Opened without a fixed version: creates the DB if absent, otherwise
+      // opens whatever version is already there.
+      try { req = indexedDB.open(DB_NAME); }
+      catch (e) { return reject(e); }
+
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(PHOTO_STORE)) {
+          db.createObjectStore(PHOTO_STORE, { keyPath: 'id' });
+        }
+      };
+      req.onsuccess = () => {
+        const db = req.result;
+        if (db.objectStoreNames.contains(PHOTO_STORE)) return resolve(db);
+        // The database exists but the photo store doesn't — an upgrade that got
+        // interrupted, or a DB created by something else. Without this repair
+        // every write would quietly fall back to memory and photos would
+        // disappear on reload. Bump the version to force the store into being.
+        const nextVersion = db.version + 1;
+        db.close();
+        let up;
+        try { up = indexedDB.open(DB_NAME, nextVersion); }
+        catch (e) { return reject(e); }
+        up.onupgradeneeded = () => {
+          const d = up.result;
+          if (!d.objectStoreNames.contains(PHOTO_STORE)) {
+            d.createObjectStore(PHOTO_STORE, { keyPath: 'id' });
+          }
+        };
+        up.onsuccess = () => resolve(up.result);
+        up.onerror = () => reject(up.error);
+        up.onblocked = () => reject(new Error('idb blocked'));
+      };
+      req.onerror = () => reject(req.error);
+      req.onblocked = () => reject(new Error('idb blocked'));
+    }).catch(err => { dbPromise = null; throw err; });
+    return dbPromise;
+  }
+
+  function idbRun(mode, fn) {
+    return openDB().then(db => new Promise((resolve, reject) => {
+      const tx = db.transaction(PHOTO_STORE, mode);
+      const req = fn(tx.objectStore(PHOTO_STORE));
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error || new Error('idb aborted'));
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    }));
+  }
+
+  function newId(prefix) {
+    return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  }
+
+  async function putPhoto(blob) {
+    const id = newId('ph');
+    try {
+      await idbRun('readwrite', s => s.put({ id, blob, createdAt: Date.now() }));
+    } catch (e) {
+      // A photo kept only in memory is gone the moment the tab closes, so say
+      // so loudly rather than pretending the save worked.
+      console.error('IndexedDB unavailable — photo is in memory only', e);
+      photoMemoryFallback.set(id, blob);
+      warnPhotoStoreBroken();
+    }
+    return id;
+  }
+  let photoWarned = false;
+  function warnPhotoStoreBroken() {
+    if (photoWarned) return;
+    photoWarned = true;
+    const el = document.getElementById('storageWarn');
+    if (el) {
+      el.innerHTML = "⚠️ This phone won't let the app store photos right now. " +
+        "Your moods are safe, but photos may not survive a reload — " +
+        "tap <strong>export my journal</strong> at the bottom to keep a copy.";
+      el.classList.add('visible');
+    }
+  }
+  async function getPhoto(id) {
+    if (photoMemoryFallback.has(id)) return photoMemoryFallback.get(id);
+    try {
+      const rec = await idbRun('readonly', s => s.get(id));
+      return rec ? rec.blob : null;
+    } catch { return null; }
+  }
+  async function deletePhoto(id) {
+    photoMemoryFallback.delete(id);
+    try { await idbRun('readwrite', s => s.delete(id)); } catch {}
+  }
+
+  // Object URLs are cached so re-opening a day doesn't leak a new URL each time.
+  const photoUrlCache = new Map();
+  const inFlightDownloads = new Map();
+
+  async function photoUrl(entry) {
+    if (entry.photoId) {
+      if (photoUrlCache.has(entry.photoId)) return photoUrlCache.get(entry.photoId);
+      const blob = await getPhoto(entry.photoId);
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        photoUrlCache.set(entry.photoId, url);
+        return url;
+      }
+      // blob is gone locally; fall through to the cloud copy if there is one
+    }
+    if (entry.photo) return entry.photo;          // legacy base64, pre-migration
+
+    // Photo lives in the cloud and hasn't been pulled down yet. Fetch once,
+    // stash it in IndexedDB, and remember the id so it's offline next time.
+    if (entry.photoPath && getSession()) {
+      const path = entry.photoPath;
+      if (!inFlightDownloads.has(path)) {
+        inFlightDownloads.set(path, (async () => {
+          const blob = await downloadPhoto(path);
+          const id = await putPhoto(blob);
+          rememberPhotoId(entry.id, id);
+          const url = URL.createObjectURL(blob);
+          photoUrlCache.set(id, url);
+          return url;
+        })().catch(err => { console.warn('photo download failed', err); return null; })
+          .finally(() => inFlightDownloads.delete(path)));
+      }
+      return inFlightDownloads.get(path);
+    }
+    return null;
+  }
+
+  // Write a freshly-downloaded photo's local id back into the journal index.
+  function rememberPhotoId(entryId, photoId) {
+    if (!entryId) return;
+    const data = load();
+    for (const entries of Object.values(data)) {
+      const hit = entries.find(e => e.id === entryId);
+      if (hit) { hit.photoId = photoId; save(data); return; }
+    }
+  }
+
+  function hasPhoto(entry) { return !!(entry.photoId || entry.photo || entry.photoPath); }
+
+  function dataUrlToBlob(dataUrl) {
+    const [head, b64] = dataUrl.split(',');
+    const mime = (head.match(/:(.*?);/) || [, 'image/jpeg'])[1];
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: mime });
+  }
+
+  // entries: { 'YYYY-MM-DD': [ { id, mood, note, time (ISO), emoji?, photoId?, filter? }, ... ] }
   function load() {
     try { return JSON.parse(readKey(STORAGE_KEY)) || {}; }
     catch { return {}; }
   }
   function save(data) {
-    writeKey(STORAGE_KEY, JSON.stringify(data));
+    return writeKey(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  // Deleted entries stay as tombstones so a delete on one device syncs to the
+  // other instead of the entry silently reappearing. Everything that renders
+  // goes through here.
+  function liveEntries(data, key) {
+    return (data[key] || []).filter(e => e && !e.deleted);
+  }
+
+  // ---- One-time migration: base64 photos out of localStorage into IndexedDB ----
+  // The old v1 key is deliberately left untouched as a safety net.
+  async function migrateLegacy() {
+    if (readKey(STORAGE_KEY)) return;              // already on v2
+    const raw = readKey(LEGACY_KEY);
+    if (!raw) { save({}); return; }
+
+    let old;
+    try { old = JSON.parse(raw) || {}; } catch { save({}); return; }
+
+    const out = {};
+    let moved = 0;
+    for (const [day, entries] of Object.entries(old)) {
+      if (!Array.isArray(entries)) continue;
+      out[day] = [];
+      for (const e of entries) {
+        const n = {
+          id: newId('e'),
+          mood: e.mood,
+          note: e.note || '',
+          time: e.time,
+          updatedAt: Date.parse(e.time) || Date.now()
+        };
+        if (e.emoji) n.emoji = e.emoji;
+        if (e.photo) {
+          try {
+            n.photoId = await putPhoto(dataUrlToBlob(e.photo));
+            moved++;
+          } catch (err) {
+            n.photo = e.photo;                      // couldn't convert — keep as-is
+          }
+        }
+        out[day].push(n);
+      }
+    }
+    save(out);
+    if (moved) console.info('Moved ' + moved + ' photo(s) into IndexedDB.');
   }
   function loadName() { return readKey(NAME_KEY); }
   function saveName(n) { writeKey(NAME_KEY, n); }
@@ -866,8 +1393,331 @@
     document.getElementById('saveBtn').disabled = true;
   });
 
+  // ============================================================
+  //  FILTERS
+  // ============================================================
+  //
+  // Everything is drawn with plain canvas paths — no model files, no CDN, no
+  // build step, works offline. Instead of face *detection* (which iOS Safari
+  // has no API for, and which would mean shipping megabytes of model weights)
+  // there's a single draggable "face frame". Human faces share the same
+  // proportions, so once the frame is over the face, the eyes / nose / mouth
+  // anchors all land in the right place and every filter lines up.
+
+  // Local coords: face centred on origin, width w, height h = 1.35w.
+  function anchors(w) {
+    const h = w * 1.35;
+    return {
+      w, h,
+      eyeDX: w * 0.21, eyeY: -h * 0.08, eyeR: w * 0.085,
+      noseY: h * 0.10,
+      mouthY: h * 0.27,
+      cheekDX: w * 0.30, cheekY: h * 0.09,
+      topY: -h * 0.5, chinY: h * 0.5
+    };
+  }
+
+  // Deterministic randomness so freckles/sparkles don't crawl between redraws.
+  function rng(seed) {
+    let s = (seed >>> 0) || 1;
+    return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+  }
+
+  function star(ctx, x, y, r, points, inner) {
+    ctx.beginPath();
+    for (let i = 0; i < points * 2; i++) {
+      const rad = i % 2 ? r * inner : r;
+      const a = (Math.PI * i) / points - Math.PI / 2;
+      ctx[i ? 'lineTo' : 'moveTo'](x + Math.cos(a) * rad, y + Math.sin(a) * rad);
+    }
+    ctx.closePath();
+  }
+
+  function heart(ctx, x, y, s) {
+    ctx.beginPath();
+    ctx.moveTo(x, y + s * 0.35);
+    ctx.bezierCurveTo(x - s, y - s * 0.4, x - s * 0.5, y - s, x, y - s * 0.35);
+    ctx.bezierCurveTo(x + s * 0.5, y - s, x + s, y - s * 0.4, x, y + s * 0.35);
+    ctx.closePath();
+  }
+
+  function whiskers(ctx, a, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = a.w * 0.012;
+    ctx.lineCap = 'round';
+    [-1, 1].forEach(side => {
+      for (let i = -1; i <= 1; i++) {
+        ctx.beginPath();
+        ctx.moveTo(side * a.w * 0.10, a.noseY + i * a.w * 0.02);
+        ctx.lineTo(side * a.w * 0.46, a.noseY + i * a.w * 0.10);
+        ctx.stroke();
+      }
+    });
+  }
+
+  // Each filter draws in local face coords. ctx is already translated to the
+  // face centre and rotated, so (0,0) is the middle of the face.
+  const FILTERS = [
+    { id: 'none', label: 'none', icon: '🚫', draw: null },
+
+    { id: 'freckles', label: 'freckles', icon: '🫧', draw(ctx, a) {
+      const r = rng(7);
+      ctx.fillStyle = 'rgba(150, 92, 58, 0.55)';
+      for (let i = 0; i < 46; i++) {
+        // scatter across both cheeks and the bridge of the nose
+        const side = i % 2 ? 1 : -1;
+        const t = r();
+        const x = side * (a.w * 0.06 + t * a.w * 0.30);
+        const y = a.noseY - a.h * 0.05 + (r() - 0.5) * a.h * 0.22;
+        const rad = a.w * (0.006 + r() * 0.009);
+        ctx.globalAlpha = 0.35 + r() * 0.4;
+        ctx.beginPath(); ctx.arc(x, y, rad, 0, 7); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }},
+
+    { id: 'dog', label: 'dog', icon: '🐶', draw(ctx, a) {
+      // floppy ears
+      [-1, 1].forEach(side => {
+        ctx.fillStyle = '#8B5E3C';
+        ctx.beginPath();
+        ctx.ellipse(side * a.w * 0.52, a.topY + a.h * 0.20, a.w * 0.16, a.h * 0.26, side * 0.22, 0, 7);
+        ctx.fill();
+        ctx.fillStyle = '#C98B63';
+        ctx.beginPath();
+        ctx.ellipse(side * a.w * 0.52, a.topY + a.h * 0.22, a.w * 0.09, a.h * 0.17, side * 0.22, 0, 7);
+        ctx.fill();
+      });
+      // snout patch + nose
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.beginPath(); ctx.ellipse(0, a.noseY + a.h * 0.04, a.w * 0.20, a.h * 0.12, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = '#2B2B2B';
+      ctx.beginPath(); ctx.ellipse(0, a.noseY, a.w * 0.10, a.w * 0.075, 0, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(0, a.noseY + a.w * 0.05);
+      ctx.lineTo(0, a.noseY + a.w * 0.11); ctx.lineWidth = a.w * 0.014;
+      ctx.strokeStyle = '#2B2B2B'; ctx.stroke();
+      // tongue
+      ctx.fillStyle = '#E8607F';
+      ctx.beginPath();
+      ctx.ellipse(0, a.mouthY + a.h * 0.10, a.w * 0.09, a.h * 0.11, 0, 0, 7);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = a.w * 0.008;
+      ctx.beginPath(); ctx.moveTo(0, a.mouthY + a.h * 0.06); ctx.lineTo(0, a.mouthY + a.h * 0.18); ctx.stroke();
+    }},
+
+    { id: 'smiley', label: 'smiley mouth', icon: '😃', draw(ctx, a) {
+      const w = a.w * 0.42, y = a.mouthY;
+      ctx.fillStyle = '#3A1B12';
+      ctx.beginPath();
+      ctx.moveTo(-w, y - a.h * 0.02);
+      ctx.quadraticCurveTo(0, y + a.h * 0.26, w, y - a.h * 0.02);
+      ctx.quadraticCurveTo(0, y + a.h * 0.06, -w, y - a.h * 0.02);
+      ctx.closePath(); ctx.fill();
+      // top row of teeth
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.moveTo(-w * 0.92, y - a.h * 0.012);
+      ctx.quadraticCurveTo(0, y + a.h * 0.055, w * 0.92, y - a.h * 0.012);
+      ctx.lineTo(w * 0.92, y - a.h * 0.03);
+      ctx.quadraticCurveTo(0, y + a.h * 0.005, -w * 0.92, y - a.h * 0.03);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#3A1B12'; ctx.lineWidth = a.w * 0.012; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-w, y - a.h * 0.02);
+      ctx.quadraticCurveTo(0, y + a.h * 0.26, w, y - a.h * 0.02);
+      ctx.stroke();
+    }},
+
+    { id: 'goofy', label: 'goofy gaze', icon: '👀', draw(ctx, a) {
+      const t = Date.now() / 600;
+      [-1, 1].forEach((side, i) => {
+        const cx = side * a.eyeDX * 1.15, cy = a.eyeY;
+        const R = a.eyeR * 2.6;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = a.w * 0.01; ctx.stroke();
+        // pupils wobble slightly, in opposite directions — the "goofy" bit
+        const ox = Math.cos(t + i * 2.1) * R * 0.34;
+        const oy = Math.sin(t * 1.3 + i * 2.1) * R * 0.34;
+        ctx.fillStyle = '#141414';
+        ctx.beginPath(); ctx.arc(cx + ox, cy + oy, R * 0.42, 0, 7); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.beginPath(); ctx.arc(cx + ox - R * 0.14, cy + oy - R * 0.14, R * 0.13, 0, 7); ctx.fill();
+      });
+    }},
+
+    { id: 'bunny', label: 'bunny', icon: '🐰', draw(ctx, a) {
+      [-1, 1].forEach(side => {
+        ctx.save();
+        ctx.translate(side * a.w * 0.19, a.topY + a.h * 0.02);
+        ctx.rotate(side * 0.20);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath(); ctx.ellipse(0, -a.h * 0.22, a.w * 0.10, a.h * 0.30, 0, 0, 7); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = a.w * 0.008; ctx.stroke();
+        ctx.fillStyle = '#F7B8C8';
+        ctx.beginPath(); ctx.ellipse(0, -a.h * 0.22, a.w * 0.05, a.h * 0.22, 0, 0, 7); ctx.fill();
+        ctx.restore();
+      });
+      ctx.fillStyle = '#F7A8BC';
+      ctx.beginPath(); ctx.ellipse(0, a.noseY, a.w * 0.055, a.w * 0.042, 0, 0, 7); ctx.fill();
+      whiskers(ctx, a, 'rgba(255,255,255,0.9)');
+    }},
+
+    { id: 'cat', label: 'cat', icon: '🐱', draw(ctx, a) {
+      [-1, 1].forEach(side => {
+        ctx.fillStyle = '#4A4A4A';
+        ctx.beginPath();
+        ctx.moveTo(side * a.w * 0.14, a.topY + a.h * 0.08);
+        ctx.lineTo(side * a.w * 0.40, a.topY - a.h * 0.16);
+        ctx.lineTo(side * a.w * 0.46, a.topY + a.h * 0.12);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#F7A8BC';
+        ctx.beginPath();
+        ctx.moveTo(side * a.w * 0.20, a.topY + a.h * 0.08);
+        ctx.lineTo(side * a.w * 0.37, a.topY - a.h * 0.09);
+        ctx.lineTo(side * a.w * 0.41, a.topY + a.h * 0.09);
+        ctx.closePath(); ctx.fill();
+      });
+      ctx.fillStyle = '#F7A8BC';
+      ctx.beginPath();
+      ctx.moveTo(-a.w * 0.055, a.noseY - a.w * 0.02);
+      ctx.lineTo(a.w * 0.055, a.noseY - a.w * 0.02);
+      ctx.lineTo(0, a.noseY + a.w * 0.045);
+      ctx.closePath(); ctx.fill();
+      whiskers(ctx, a, 'rgba(255,255,255,0.92)');
+    }},
+
+    { id: 'hearteyes', label: 'heart eyes', icon: '😍', draw(ctx, a) {
+      [-1, 1].forEach(side => {
+        ctx.save();
+        ctx.translate(side * a.eyeDX, a.eyeY);
+        ctx.fillStyle = '#E63950';
+        heart(ctx, 0, 0, a.eyeR * 2.1); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        heart(ctx, -a.eyeR * 0.45, -a.eyeR * 0.35, a.eyeR * 0.5); ctx.fill();
+        ctx.restore();
+      });
+    }},
+
+    { id: 'cool', label: 'cool shades', icon: '😎', draw(ctx, a) {
+      const lensW = a.w * 0.26, lensH = a.h * 0.13;
+      ctx.fillStyle = 'rgba(18,22,30,0.88)';
+      [-1, 1].forEach(side => {
+        ctx.beginPath();
+        ctx.roundRect(side * a.eyeDX - lensW / 2 + side * a.w * 0.02, a.eyeY - lensH / 2, lensW, lensH, a.w * 0.04);
+        ctx.fill();
+      });
+      ctx.strokeStyle = 'rgba(18,22,30,0.88)';
+      ctx.lineWidth = a.w * 0.022;
+      ctx.beginPath();
+      ctx.moveTo(-a.eyeDX + a.w * 0.10, a.eyeY);
+      ctx.lineTo(a.eyeDX - a.w * 0.10, a.eyeY);
+      ctx.moveTo(-a.eyeDX - lensW / 2 - a.w * 0.02, a.eyeY - lensH * 0.2);
+      ctx.lineTo(-a.w * 0.50, a.eyeY - lensH * 0.5);
+      ctx.moveTo(a.eyeDX + lensW / 2 + a.w * 0.02, a.eyeY - lensH * 0.2);
+      ctx.lineTo(a.w * 0.50, a.eyeY - lensH * 0.5);
+      ctx.stroke();
+      // glint
+      ctx.strokeStyle = 'rgba(255,255,255,0.30)'; ctx.lineWidth = a.w * 0.012;
+      [-1, 1].forEach(side => {
+        ctx.beginPath();
+        ctx.moveTo(side * a.eyeDX - lensW * 0.30, a.eyeY + lensH * 0.22);
+        ctx.lineTo(side * a.eyeDX - lensW * 0.05, a.eyeY - lensH * 0.26);
+        ctx.stroke();
+      });
+    }},
+
+    { id: 'blush', label: 'blush', icon: '☺️', draw(ctx, a) {
+      [-1, 1].forEach(side => {
+        const g = ctx.createRadialGradient(side * a.cheekDX, a.cheekY, 0, side * a.cheekDX, a.cheekY, a.w * 0.17);
+        g.addColorStop(0, 'rgba(240,120,140,0.50)');
+        g.addColorStop(1, 'rgba(240,120,140,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(side * a.cheekDX, a.cheekY, a.w * 0.17, 0, 7); ctx.fill();
+      });
+    }},
+
+    { id: 'flowers', label: 'flower crown', icon: '🌸', draw(ctx, a) {
+      const cols = ['#F7A8BC', '#FFD9E1', '#E8C7F0', '#FFF1B8', '#BFE3F0'];
+      for (let i = 0; i <= 10; i++) {
+        const t = i / 10;
+        const ang = Math.PI * (1.06 + t * 0.88);
+        const rx = a.w * 0.56, ry = a.h * 0.46;
+        const x = Math.cos(ang) * rx, y = Math.sin(ang) * ry - a.h * 0.06;
+        const s = a.w * (0.055 + (i % 3) * 0.012);
+        ctx.fillStyle = cols[i % cols.length];
+        for (let p = 0; p < 5; p++) {
+          const pa = (Math.PI * 2 * p) / 5;
+          ctx.beginPath();
+          ctx.ellipse(x + Math.cos(pa) * s * 0.6, y + Math.sin(pa) * s * 0.6, s * 0.5, s * 0.36, pa, 0, 7);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#FFE9A8';
+        ctx.beginPath(); ctx.arc(x, y, s * 0.30, 0, 7); ctx.fill();
+      }
+    }},
+
+    { id: 'sparkle', label: 'sparkles', icon: '✨', draw(ctx, a) {
+      const r = rng(21);
+      for (let i = 0; i < 16; i++) {
+        const ang = r() * Math.PI * 2;
+        const rad = a.w * (0.52 + r() * 0.30);
+        const x = Math.cos(ang) * rad, y = Math.sin(ang) * rad * 1.15;
+        const s = a.w * (0.025 + r() * 0.045);
+        ctx.fillStyle = ['#FFE9A8', '#FFFFFF', '#BFE3F0'][i % 3];
+        ctx.globalAlpha = 0.65 + r() * 0.35;
+        star(ctx, x, y, s, 4, 0.34); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }},
+
+    { id: 'mustache', label: 'disguise', icon: '🥸', draw(ctx, a) {
+      const lensR = a.w * 0.15;
+      ctx.strokeStyle = '#2B2B2B'; ctx.lineWidth = a.w * 0.022;
+      [-1, 1].forEach(side => {
+        ctx.beginPath(); ctx.arc(side * a.eyeDX, a.eyeY, lensR, 0, 7); ctx.stroke();
+      });
+      ctx.beginPath();
+      ctx.moveTo(-a.eyeDX + lensR, a.eyeY); ctx.lineTo(a.eyeDX - lensR, a.eyeY);
+      ctx.moveTo(-a.eyeDX - lensR, a.eyeY); ctx.lineTo(-a.w * 0.50, a.eyeY - a.h * 0.02);
+      ctx.moveTo(a.eyeDX + lensR, a.eyeY); ctx.lineTo(a.w * 0.50, a.eyeY - a.h * 0.02);
+      ctx.stroke();
+      // brows
+      ctx.lineWidth = a.w * 0.05; ctx.lineCap = 'round';
+      [-1, 1].forEach(side => {
+        ctx.beginPath();
+        ctx.moveTo(side * a.eyeDX - a.w * 0.13, a.eyeY - a.h * 0.13);
+        ctx.quadraticCurveTo(side * a.eyeDX, a.eyeY - a.h * 0.18, side * a.eyeDX + a.w * 0.13, a.eyeY - a.h * 0.12);
+        ctx.stroke();
+      });
+      // moustache
+      ctx.fillStyle = '#2B2B2B';
+      ctx.beginPath();
+      ctx.moveTo(0, a.mouthY - a.h * 0.05);
+      ctx.bezierCurveTo(-a.w * 0.14, a.mouthY - a.h * 0.13, -a.w * 0.40, a.mouthY - a.h * 0.10, -a.w * 0.34, a.mouthY + a.h * 0.01);
+      ctx.bezierCurveTo(-a.w * 0.26, a.mouthY + a.h * 0.05, -a.w * 0.10, a.mouthY + a.h * 0.01, 0, a.mouthY - a.h * 0.01);
+      ctx.bezierCurveTo(a.w * 0.10, a.mouthY + a.h * 0.01, a.w * 0.26, a.mouthY + a.h * 0.05, a.w * 0.34, a.mouthY + a.h * 0.01);
+      ctx.bezierCurveTo(a.w * 0.40, a.mouthY - a.h * 0.10, a.w * 0.14, a.mouthY - a.h * 0.13, 0, a.mouthY - a.h * 0.05);
+      ctx.closePath(); ctx.fill();
+    }}
+  ];
+
+  function filterById(id) { return FILTERS.find(f => f.id === id) || FILTERS[0]; }
+
+  // Paint a filter onto ctx for a face frame given in *image* pixel coords.
+  function paintFilter(ctx, filterId, frame) {
+    const f = filterById(filterId);
+    if (!f || !f.draw) return;
+    ctx.save();
+    ctx.translate(frame.cx, frame.cy);
+    ctx.rotate(frame.rot || 0);
+    f.draw(ctx, anchors(frame.size));
+    ctx.restore();
+  }
+
   // ---- Photo handling ----
-  let pendingPhoto = null; // dataURL string
+  // pendingPhoto: { blob, url, filter } — a Blob, never a base64 string.
+  let pendingPhoto = null;
 
   document.getElementById('cameraBtn').addEventListener('click', () => {
     document.getElementById('cameraInput').click();
@@ -879,12 +1729,10 @@
   async function handlePhotoFile(file) {
     if (!file) return;
     try {
-      pendingPhoto = await compressImage(file, 800, 0.8);
-      document.getElementById('photoThumb').src = pendingPhoto;
-      document.getElementById('photoPreview').classList.add('visible');
-      document.getElementById('cameraBtn').style.display = 'none';
-      document.getElementById('libraryBtn').style.display = 'none';
+      const img = await loadImage(file, 1000);
+      openStudio(img);
     } catch (err) {
+      console.error(err);
       alert('Could not load that photo. Try another?');
     }
   }
@@ -898,47 +1746,282 @@
     e.target.value = '';
   });
 
-  document.getElementById('photoRemove').addEventListener('click', () => {
+  document.getElementById('photoRemove').addEventListener('click', clearPendingPhoto);
+
+  function clearPendingPhoto() {
+    if (pendingPhoto && pendingPhoto.url) URL.revokeObjectURL(pendingPhoto.url);
     pendingPhoto = null;
     document.getElementById('photoPreview').classList.remove('visible');
     document.getElementById('cameraBtn').style.display = '';
     document.getElementById('libraryBtn').style.display = '';
-  });
+  }
 
-  function compressImage(file, maxDim, quality) {
+  // Decode a file into a downscaled offscreen canvas.
+  function loadImage(file, maxDim) {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = new Image();
-        img.onload = () => {
-          let { width, height } = img;
-          if (width > height && width > maxDim) {
-            height = Math.round(height * maxDim / width); width = maxDim;
-          } else if (height > maxDim) {
-            width = Math.round(width * maxDim / height); height = maxDim;
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = width; canvas.height = height;
-          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', quality));
-        };
-        img.onerror = reject;
-        img.src = reader.result;
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        let { naturalWidth: width, naturalHeight: height } = img;
+        if (width > height && width > maxDim) {
+          height = Math.round(height * maxDim / width); width = maxDim;
+        } else if (height > maxDim) {
+          width = Math.round(width * maxDim / height); height = maxDim;
+        }
+        const c = document.createElement('canvas');
+        c.width = width; c.height = height;
+        c.getContext('2d').drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        resolve(c);
       };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('decode failed')); };
+      img.src = url;
     });
   }
 
-  document.getElementById('saveBtn').addEventListener('click', () => {
+  function canvasToBlob(canvas, type, quality) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), type, quality);
+    });
+  }
+
+  // ---- Filter studio ----
+  // studio.frame lives in *source image* pixel coords; the on-screen canvas is
+  // just a scaled view of it, so the composite always matches the preview.
+  let studio = null;
+
+  function openStudio(srcCanvas) {
+    const view = document.getElementById('studioCanvas');
+    const size = Math.min(srcCanvas.width, srcCanvas.height);
+    studio = {
+      src: srcCanvas,
+      view,
+      ctx: view.getContext('2d'),
+      filterId: (pendingPhoto && pendingPhoto.filter) || 'freckles',
+      frame: { cx: srcCanvas.width / 2, cy: srcCanvas.height * 0.44, size: size * 0.55, rot: 0 },
+      pointers: new Map(),
+      gesture: null,
+      raf: 0
+    };
+    buildFilterChips();
+    document.getElementById('studioBg').classList.add('open');
+    // layout has to settle before we can measure the canvas box
+    requestAnimationFrame(() => { fitStudioCanvas(); studioLoop(); });
+  }
+
+  function closeStudio() {
+    if (studio && studio.raf) cancelAnimationFrame(studio.raf);
+    document.getElementById('studioBg').classList.remove('open');
+    studio = null;
+  }
+
+  function fitStudioCanvas() {
+    if (!studio) return;
+    const { src, view } = studio;
+    const box = view.parentElement.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const scale = Math.min(box.width / src.width, box.height / src.height);
+    const cssW = Math.max(1, Math.round(src.width * scale));
+    const cssH = Math.max(1, Math.round(src.height * scale));
+    view.style.width = cssW + 'px';
+    view.style.height = cssH + 'px';
+    view.width = Math.round(cssW * dpr);
+    view.height = Math.round(cssH * dpr);
+    studio.scale = view.width / src.width;   // image px -> canvas px
+    studio.cssScale = cssW / src.width;      // image px -> css px
+  }
+
+  function studioLoop() {
+    if (!studio) return;
+    drawStudio();
+    studio.raf = requestAnimationFrame(studioLoop);
+  }
+
+  function drawStudio() {
+    const { ctx, src, view, frame, scale } = studio;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, view.width, view.height);
+    ctx.drawImage(src, 0, 0, view.width, view.height);
+
+    ctx.save();
+    ctx.scale(scale, scale);
+    paintFilter(ctx, studio.filterId, frame);
+    ctx.restore();
+
+    // positioning guide — preview only, never composited into the saved photo
+    ctx.save();
+    ctx.scale(scale, scale);
+    ctx.translate(frame.cx, frame.cy);
+    ctx.rotate(frame.rot);
+    ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+    ctx.lineWidth = (2 / scale);
+    ctx.setLineDash([8 / scale, 7 / scale]);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, frame.size / 2, frame.size * 1.35 / 2, 0, 0, 7);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function buildFilterChips() {
+    const row = document.getElementById('filterChips');
+    row.innerHTML = '';
+    FILTERS.forEach(f => {
+      const b = document.createElement('button');
+      b.className = 'filter-chip' + (f.id === studio.filterId ? ' active' : '');
+      b.innerHTML = '<span class="chip-icon">' + f.icon + '</span><span>' + f.label + '</span>';
+      b.addEventListener('click', () => {
+        studio.filterId = f.id;
+        [...row.children].forEach(c => c.classList.remove('active'));
+        b.classList.add('active');
+      });
+      row.appendChild(b);
+    });
+  }
+
+  // --- gestures: one finger moves, two fingers pinch to resize + rotate ---
+  function studioPoint(e) {
+    const r = studio.view.getBoundingClientRect();
+    return { x: (e.clientX - r.left) / studio.cssScale, y: (e.clientY - r.top) / studio.cssScale };
+  }
+
+  function bindStudioGestures() {
+    const view = document.getElementById('studioCanvas');
+
+    view.addEventListener('pointerdown', e => {
+      if (!studio) return;
+      view.setPointerCapture(e.pointerId);
+      studio.pointers.set(e.pointerId, studioPoint(e));
+      startGesture();
+    });
+
+    view.addEventListener('pointermove', e => {
+      if (!studio || !studio.pointers.has(e.pointerId)) return;
+      e.preventDefault();
+      studio.pointers.set(e.pointerId, studioPoint(e));
+      applyGesture();
+    });
+
+    const end = e => {
+      if (!studio) return;
+      studio.pointers.delete(e.pointerId);
+      startGesture();   // re-baseline so the remaining finger doesn't jump
+    };
+    view.addEventListener('pointerup', end);
+    view.addEventListener('pointercancel', end);
+    view.addEventListener('contextmenu', e => e.preventDefault());
+  }
+
+  function gestureState() {
+    const pts = [...studio.pointers.values()];
+    if (!pts.length) return null;
+    if (pts.length === 1) return { mx: pts[0].x, my: pts[0].y, dist: 0, ang: 0 };
+    const [a, b] = pts;
+    return {
+      mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2,
+      dist: Math.hypot(b.x - a.x, b.y - a.y),
+      ang: Math.atan2(b.y - a.y, b.x - a.x)
+    };
+  }
+
+  function startGesture() {
+    const g = gestureState();
+    studio.gesture = g ? { ...g, frame: { ...studio.frame } } : null;
+  }
+
+  function applyGesture() {
+    const g = gestureState();
+    const s = studio.gesture;
+    if (!g || !s) return;
+    const f = studio.frame;
+    f.cx = s.frame.cx + (g.mx - s.mx);
+    f.cy = s.frame.cy + (g.my - s.my);
+    if (s.dist > 0 && g.dist > 0) {
+      f.size = Math.max(40, Math.min(studio.src.width * 2.2, s.frame.size * (g.dist / s.dist)));
+      f.rot = s.frame.rot + (g.ang - s.ang);
+    }
+    syncSizeSlider();
+  }
+
+  function syncSizeSlider() {
+    const sl = document.getElementById('studioSize');
+    if (sl && studio) sl.value = String(Math.round(studio.frame.size));
+  }
+
+  document.getElementById('studioSize').addEventListener('input', e => {
+    if (!studio) return;
+    studio.frame.size = Number(e.target.value);
+  });
+  document.getElementById('studioReset').addEventListener('click', () => {
+    if (!studio) return;
+    const size = Math.min(studio.src.width, studio.src.height);
+    studio.frame = { cx: studio.src.width / 2, cy: studio.src.height * 0.44, size: size * 0.55, rot: 0 };
+    syncSizeSlider();
+  });
+  document.getElementById('studioCancel').addEventListener('click', closeStudio);
+  document.getElementById('studioBg').addEventListener('click', e => {
+    if (e.target.id === 'studioBg') closeStudio();
+  });
+  window.addEventListener('resize', () => { if (studio) fitStudioCanvas(); });
+
+  document.getElementById('studioUse').addEventListener('click', async () => {
+    if (!studio) return;
+    const { src, frame, filterId } = studio;
+    const out = document.createElement('canvas');
+    out.width = src.width; out.height = src.height;
+    const octx = out.getContext('2d');
+    octx.drawImage(src, 0, 0);
+    paintFilter(octx, filterId, frame);          // no guide ellipse here
+    try {
+      const blob = await canvasToBlob(out, 'image/jpeg', 0.82);
+      if (pendingPhoto && pendingPhoto.url) URL.revokeObjectURL(pendingPhoto.url);
+      pendingPhoto = { blob, url: URL.createObjectURL(blob), filter: filterId };
+      document.getElementById('photoThumb').src = pendingPhoto.url;
+      document.getElementById('photoPreview').classList.add('visible');
+      document.getElementById('photoFilterTag').textContent =
+        filterId === 'none' ? 'photo ready ✨' : filterById(filterId).icon + ' ' + filterById(filterId).label;
+      document.getElementById('cameraBtn').style.display = 'none';
+      document.getElementById('libraryBtn').style.display = 'none';
+      closeStudio();
+    } catch (err) {
+      console.error(err);
+      alert('Could not use that photo. Try again?');
+    }
+  });
+
+  bindStudioGestures();
+
+  document.getElementById('saveBtn').addEventListener('click', async () => {
     if (!selectedMood) return;
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+
     const note = document.getElementById('noteInput').value.trim();
-    const data = load();
-    const key = dateKey(new Date());
-    if (!data[key]) data[key] = [];
-    const entry = { mood: selectedMood, note, time: new Date().toISOString() };
+    const now = new Date();
+    const entry = {
+      id: newId('e'),
+      mood: selectedMood,
+      note,
+      time: now.toISOString(),
+      updatedAt: Date.now()
+    };
     if (selectedMood === 'custom' && selectedCustomEmoji) entry.emoji = selectedCustomEmoji;
-    if (pendingPhoto) entry.photo = pendingPhoto;
+
+    // Photo blob goes to IndexedDB first; only its id ever touches localStorage.
+    if (pendingPhoto) {
+      try {
+        entry.photoId = await putPhoto(pendingPhoto.blob);
+        if (pendingPhoto.filter && pendingPhoto.filter !== 'none') entry.filter = pendingPhoto.filter;
+        photoUrlCache.set(entry.photoId, pendingPhoto.url);   // reuse the URL we already made
+        pendingPhoto.url = null;                              // ownership moved to the cache
+      } catch (err) {
+        console.error('photo save failed', err);
+        alert('Could not save that photo, but your mood was saved.');
+      }
+    }
+
+    const data = load();
+    const key = dateKey(now);
+    if (!data[key]) data[key] = [];
     data[key].push(entry);
     save(data);
 
@@ -948,14 +2031,11 @@
     selectedMood = null;
     selectedCustomEmoji = null;
     document.getElementById('customPill').classList.remove('visible');
-    pendingPhoto = null;
-    document.getElementById('photoPreview').classList.remove('visible');
-    document.getElementById('cameraBtn').style.display = '';
-    document.getElementById('libraryBtn').style.display = '';
-    document.getElementById('saveBtn').disabled = true;
+    clearPendingPhoto();
     renderCalendar();
     renderStats();
     flashSave();
+    queueSync();
   });
 
   function flashSave() {
@@ -1000,7 +2080,7 @@
     for (let d = 1; d <= daysInMonth; d++) {
       const dayDate = new Date(year, month, d);
       const k = dateKey(dayDate);
-      const entries = data[k] || [];
+      const entries = liveEntries(data, k);
       const cell = document.createElement('div');
       cell.className = 'day';
       if (k === todayKey) cell.classList.add('today');
@@ -1032,7 +2112,7 @@
           cell.appendChild(badge);
         }
 
-        if (entries.some(e => e.photo)) {
+        if (entries.some(hasPhoto)) {
           const corner = document.createElement('div');
           corner.className = 'photo-corner';
           corner.textContent = '📷';
@@ -1060,7 +2140,7 @@
   // ---- Day modal ----
   function openDay(key, dayDate) {
     const data = load();
-    const entries = (data[key] || []).slice().sort((a,b) => new Date(a.time) - new Date(b.time));
+    const entries = liveEntries(data, key).slice().sort((a,b) => new Date(a.time) - new Date(b.time));
 
     document.getElementById('modalTitle').textContent =
       dayDate.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
@@ -1085,13 +2165,27 @@
             <div class="bubble-time">${time}</div>
           </div>
           <div class="bubble-text">${escapeHtml(e.note)}</div>
-          ${e.photo ? `<img class="bubble-photo" src="${e.photo}" alt="photo">` : ''}
+          ${hasPhoto(e) ? `<div class="bubble-photo-wrap"><img class="bubble-photo" alt="photo">${
+            e.filter ? `<span class="bubble-filter-tag">${filterById(e.filter).icon} ${filterById(e.filter).label}</span>` : ''
+          }</div>` : ''}
         `;
+        // Photo blobs come out of IndexedDB, so the src resolves asynchronously.
+        if (hasPhoto(e)) {
+          const img = b.querySelector('.bubble-photo');
+          photoUrl(e).then(url => {
+            if (url) img.src = url;
+            else img.replaceWith(Object.assign(document.createElement('div'),
+              { className: 'bubble-photo-missing', textContent: 'photo missing' }));
+          });
+        }
         b.querySelector('.bubble-delete').addEventListener('click', (ev) => {
           ev.stopPropagation();
-          deleteEntry(key, e.time);
+          if (!confirm('Delete this entry?')) return;
+          deleteEntry(key, e);
           openDay(key, dayDate);
           renderCalendar();
+          renderStats();
+          queueSync();
         });
         wrap.appendChild(b);
       });
@@ -1104,11 +2198,22 @@
     return MOOD_COLOR[mood] || MOOD_COLOR.custom;
   }
 
-  function deleteEntry(key, isoTime) {
+  // Soft delete: the row is kept as a tombstone so the deletion can sync to
+  // other devices. The photo blob is the only thing actually thrown away.
+  function deleteEntry(key, entry) {
     const data = load();
     if (!data[key]) return;
-    data[key] = data[key].filter(e => e.time !== isoTime);
-    if (data[key].length === 0) delete data[key];
+    const row = data[key].find(e => (entry.id && e.id === entry.id) || (!entry.id && e.time === entry.time));
+    if (!row) return;
+    if (row.photoId) {
+      deletePhoto(row.photoId);
+      const cached = photoUrlCache.get(row.photoId);
+      if (cached) { URL.revokeObjectURL(cached); photoUrlCache.delete(row.photoId); }
+      delete row.photoId;
+    }
+    delete row.photo;
+    row.deleted = true;
+    row.updatedAt = Date.now();
     save(data);
   }
 
@@ -1137,7 +2242,8 @@
     const customEmojiCounts = {}; // emoji -> count
     let totalEntries = 0;
     let daysLogged = new Set();
-    Object.entries(data).forEach(([k, entries]) => {
+    Object.keys(data).forEach(k => {
+      const entries = liveEntries(data, k);
       const [y, m] = k.split('-');
       if (parseInt(y) === year && parseInt(m) === month + 1) {
         entries.forEach(e => {
@@ -1219,6 +2325,9 @@
     // Streak + photo streak
     const streak = currentStreak(data);
     const photoStreak = currentPhotoStreak(data);
+    const bestPhoto = bestStreak(data, entries => entries.some(hasPhoto));
+    const photoDays = Object.keys(data).filter(k => liveEntries(data, k).some(hasPhoto)).length;
+
     const streakBlock = document.createElement('div');
     streakBlock.className = 'stats-streak';
     streakBlock.innerHTML = `
@@ -1236,35 +2345,57 @@
       </div>
     `;
     body.appendChild(streakBlock);
+
+    const photoNote = document.createElement('div');
+    photoNote.className = 'photo-streak-note';
+    photoNote.innerHTML = photoDays === 0
+      ? 'add a photo to an entry to start a photo streak 📷'
+      : `<strong>${photoDays}</strong> day${photoDays === 1 ? '' : 's'} with a photo · best photo streak <strong>${bestPhoto}</strong> 📷`;
+    body.appendChild(photoNote);
   }
 
   function currentStreak(data) {
     return computeStreak(data, () => true);
   }
   function currentPhotoStreak(data) {
-    return computeStreak(data, entries => entries.some(e => e.photo));
+    return computeStreak(data, entries => entries.some(hasPhoto));
   }
+
   function computeStreak(data, predicate) {
     let streak = 0;
     const d = new Date();
-    d.setHours(0,0,0,0);
+    d.setHours(0, 0, 0, 0);
     let firstDay = true;
-    while (true) {
-      const k = dateKey(d);
-      const entries = data[k] || [];
+    // Bounded so a corrupt data blob can never spin forever.
+    for (let guard = 0; guard < 4000; guard++) {
+      const entries = liveEntries(data, dateKey(d));
       if (entries.length > 0 && predicate(entries)) {
         streak++;
-        d.setDate(d.getDate() - 1);
-        firstDay = false;
-      } else if (firstDay) {
-        // Today gets grace — the day isn't over yet
-        d.setDate(d.getDate() - 1);
-        firstDay = false;
-      } else {
+      } else if (!firstDay) {
         break;
       }
+      // Today gets grace — the day isn't over yet, so a missing photo today
+      // doesn't end a streak that's otherwise alive.
+      d.setDate(d.getDate() - 1);
+      firstDay = false;
     }
     return streak;
+  }
+
+  // Longest run ever, so the number means something even after a break.
+  function bestStreak(data, predicate) {
+    const days = Object.keys(data).filter(k => {
+      const e = liveEntries(data, k);
+      return e.length > 0 && predicate(e);
+    }).sort();
+    let best = 0, run = 0, prev = null;
+    for (const k of days) {
+      const cur = new Date(k + 'T00:00:00');
+      run = (prev && (cur - prev) === 86400000) ? run + 1 : 1;
+      best = Math.max(best, run);
+      prev = cur;
+    }
+    return best;
   }
 
   // ---- Onboarding ----
@@ -1334,45 +2465,493 @@
     document.getElementById('quoteAuthor').textContent = '— ' + q.who;
   }
 
-  // ---- Export ----
-  document.getElementById('exportBtn').addEventListener('click', () => {
-    const data = load();
-    const name = loadName() || 'mood-journal';
-    const today = new Date().toISOString().slice(0, 10);
-    const payload = {
-      app: 'Mood Journal',
-      exportedAt: new Date().toISOString(),
-      name: name,
-      entries: data
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${name.toLowerCase().replace(/\s+/g, '-')}-mood-journal-${today}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  // ---- Export / restore ----
+  // The export is the real backup, so photos get pulled back out of IndexedDB
+  // and re-embedded as base64. One file, fully self-contained, restorable
+  // anywhere — no account needed.
+  function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+  }
 
+  document.getElementById('exportBtn').addEventListener('click', async () => {
     const btn = document.getElementById('exportBtn');
     const orig = btn.textContent;
-    btn.textContent = '✓ saved to downloads';
-    setTimeout(() => { btn.textContent = orig; }, 1800);
+    btn.textContent = 'packing photos…';
+    btn.disabled = true;
+    try {
+      const data = load();
+      const out = {};
+      let photos = 0;
+      for (const [day, entries] of Object.entries(data)) {
+        out[day] = [];
+        for (const e of entries) {
+          const copy = { ...e };
+          if (copy.photoId) {
+            const blob = await getPhoto(copy.photoId);
+            if (blob) { copy.photo = await blobToDataUrl(blob); photos++; }
+            delete copy.photoId;
+          }
+          out[day].push(copy);
+        }
+      }
+      const name = loadName() || 'mood-journal';
+      const today = new Date().toISOString().slice(0, 10);
+      const payload = {
+        app: 'Mood Journal',
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        name,
+        photoCount: photos,
+        entries: out
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${name.toLowerCase().replace(/\s+/g, '-')}-mood-journal-${today}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      btn.textContent = `✓ saved (${photos} photo${photos === 1 ? '' : 's'})`;
+    } catch (err) {
+      console.error(err);
+      btn.textContent = 'export failed — try again';
+    }
+    btn.disabled = false;
+    setTimeout(() => { btn.textContent = orig; }, 2600);
   });
 
-  // ---- Init ----
-  renderTodayHeader();
-  renderQuote();
-  buildEmojiGrid();
-  renderCalendar();
-  renderStats();
-  const savedName = loadName();
-  if (savedName) {
-    applyName(savedName);
-  } else {
-    showOnboarding();
+  // Restore MERGES — it never wipes what's already on the device.
+  document.getElementById('importBtn').addEventListener('click', () => {
+    document.getElementById('importInput').click();
+  });
+  document.getElementById('importInput').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const btn = document.getElementById('importBtn');
+    const orig = btn.textContent;
+    btn.textContent = 'restoring…';
+    try {
+      const payload = JSON.parse(await file.text());
+      const incoming = payload.entries || payload;
+      if (typeof incoming !== 'object') throw new Error('not a journal file');
+
+      const data = load();
+      let added = 0;
+      for (const [day, entries] of Object.entries(incoming)) {
+        if (!Array.isArray(entries)) continue;
+        if (!data[day]) data[day] = [];
+        for (const e of entries) {
+          // Same moment + same mood = same entry. Skip rather than duplicate.
+          const dupe = data[day].some(x =>
+            (e.id && x.id === e.id) || (x.time === e.time && x.mood === e.mood));
+          if (dupe) continue;
+          const n = {
+            id: e.id || newId('e'),
+            mood: e.mood,
+            note: e.note || '',
+            time: e.time,
+            updatedAt: e.updatedAt || Date.parse(e.time) || Date.now()
+          };
+          if (e.emoji) n.emoji = e.emoji;
+          if (e.filter) n.filter = e.filter;
+          if (e.deleted) n.deleted = true;
+          if (e.photo) {
+            try { n.photoId = await putPhoto(dataUrlToBlob(e.photo)); } catch { n.photo = e.photo; }
+          }
+          data[day].push(n);
+          added++;
+        }
+      }
+      save(data);
+      if (payload.name && !loadName()) { saveName(payload.name); applyName(payload.name); }
+      renderCalendar();
+      renderStats();
+      btn.textContent = `✓ restored ${added} entr${added === 1 ? 'y' : 'ies'}`;
+      queueSync();
+    } catch (err) {
+      console.error(err);
+      btn.textContent = 'could not read that file';
+    }
+    setTimeout(() => { btn.textContent = orig; }, 2600);
+  });
+
+  // ============================================================
+  //  CLOUD SYNC
+  // ============================================================
+  //
+  // Safety rule, applied everywhere below: sync NEVER removes a local entry.
+  // It only adds remote entries that are missing locally, and overwrites a
+  // local entry when the remote copy is genuinely newer (by updated_at).
+  // Even signing out leaves every entry and photo on the device.
+  //
+  // The publishable key below is meant to be public — it identifies the
+  // project, it doesn't grant access. Row-level security is what keeps one
+  // account's journal invisible to every other account.
+
+  const SB_URL  = 'https://fkorolkxfvetdilhhssd.supabase.co';
+  const SB_KEY  = 'sb_publishable_oOgxo2tPmtX_GWW-5cKjPw_rIIvNgR7';
+  const SESSION_KEY = 'mood-journal-session-v1';
+  const PHOTO_BUCKET = 'photos';
+
+  let syncTimer = null;
+  let syncing = false;
+
+  function getSession() {
+    try { return JSON.parse(readKey(SESSION_KEY)); } catch { return null; }
   }
+  function setSession(s) { writeKey(SESSION_KEY, JSON.stringify(s)); }
+  function clearSession() {
+    memoryStore[SESSION_KEY] = null;
+    try { localStorage.removeItem(SESSION_KEY); } catch {}
+  }
+
+  function sessionFrom(d, emailFallback) {
+    return {
+      access_token: d.access_token,
+      refresh_token: d.refresh_token,
+      expires_at: Date.now() + (d.expires_in || 3600) * 1000,
+      user_id: (d.user && d.user.id) || d.user_id,
+      email: (d.user && d.user.email) || emailFallback
+    };
+  }
+
+  // Returns a valid access token, refreshing if it's close to expiry.
+  // A network failure returns null WITHOUT signing out — only a hard rejection
+  // from the auth server clears the session.
+  async function freshToken() {
+    const s = getSession();
+    if (!s || !s.refresh_token) return null;
+    if (s.access_token && Date.now() < s.expires_at - 60000) return s.access_token;
+    try {
+      const r = await fetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', {
+        method: 'POST',
+        headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: s.refresh_token })
+      });
+      if (r.status === 400 || r.status === 401) { clearSession(); renderCloudBar(); return null; }
+      if (!r.ok) return null;
+      const d = await r.json();
+      const next = sessionFrom(d, s.email);
+      if (!next.user_id) next.user_id = s.user_id;
+      setSession(next);
+      return next.access_token;
+    } catch { return null; }   // offline — keep the session, try again later
+  }
+
+  async function sbFetch(path, opts = {}) {
+    const token = await freshToken();
+    if (!token) throw new Error('not signed in');
+    const headers = Object.assign({
+      apikey: SB_KEY,
+      Authorization: 'Bearer ' + token
+    }, opts.headers || {});
+    const r = await fetch(SB_URL + path, Object.assign({}, opts, { headers }));
+    if (!r.ok) {
+      const text = await r.text().catch(() => '');
+      throw new Error(r.status + ' ' + text.slice(0, 200));
+    }
+    return r;
+  }
+
+  // ---- row <-> entry mapping ----
+  function toRow(entry, day, userId) {
+    return {
+      user_id: userId,
+      id: entry.id,
+      day,
+      mood: entry.mood,
+      note: entry.note || '',
+      emoji: entry.emoji || null,
+      filter: entry.filter || null,
+      photo_path: entry.photoPath || null,
+      entry_time: entry.time,
+      deleted: !!entry.deleted,
+      updated_at: entry.updatedAt || Date.parse(entry.time) || Date.now()
+    };
+  }
+  function fromRow(row) {
+    const e = {
+      id: row.id,
+      mood: row.mood,
+      note: row.note || '',
+      time: row.entry_time,
+      updatedAt: Number(row.updated_at) || 0
+    };
+    if (row.emoji) e.emoji = row.emoji;
+    if (row.filter) e.filter = row.filter;
+    if (row.photo_path) e.photoPath = row.photo_path;
+    if (row.deleted) e.deleted = true;
+    return e;
+  }
+
+  async function uploadPhoto(blob, entryId, userId) {
+    const path = userId + '/' + entryId + '.jpg';
+    await sbFetch('/storage/v1/object/' + PHOTO_BUCKET + '/' + path, {
+      method: 'POST',
+      headers: { 'Content-Type': blob.type || 'image/jpeg', 'x-upsert': 'true' },
+      body: blob
+    });
+    return path;
+  }
+  async function downloadPhoto(path) {
+    const r = await sbFetch('/storage/v1/object/' + PHOTO_BUCKET + '/' + path);
+    return await r.blob();
+  }
+
+  // ---- the merge ----
+  async function syncNow(reason) {
+    const s = getSession();
+    if (!s || syncing || !navigator.onLine) return;
+    syncing = true;
+    setCloudState('busy', 'syncing…');
+    try {
+      const token = await freshToken();
+      if (!token) { setCloudState('err', 'sign in again'); return; }
+
+      const local = load();
+      // Anything without an id (odd import, hand-edited data) gets one so it
+      // can take part in syncing instead of being silently skipped.
+      let repaired = false;
+      for (const entries of Object.values(local)) {
+        for (const e of entries) {
+          if (!e.id) { e.id = newId('e'); repaired = true; }
+          if (!e.updatedAt) { e.updatedAt = Date.parse(e.time) || Date.now(); repaired = true; }
+        }
+      }
+      if (repaired) save(local);
+
+      const rows = await (await sbFetch('/rest/v1/entries?select=*')).json();
+      const remoteById = new Map(rows.map(r => [r.id, r]));
+
+      // remote -> local (add or update; never delete)
+      let touched = false;
+      for (const row of rows) {
+        const day = row.day;
+        if (!local[day]) local[day] = [];
+        const idx = local[day].findIndex(e => e.id === row.id);
+        if (idx === -1) {
+          local[day].push(fromRow(row));
+          touched = true;
+        } else if ((Number(row.updated_at) || 0) > (local[day][idx].updatedAt || 0)) {
+          // keep a local photoId if we already have the blob cached
+          const keepId = local[day][idx].photoId;
+          local[day][idx] = fromRow(row);
+          if (keepId) local[day][idx].photoId = keepId;
+          touched = true;
+        }
+      }
+
+      // local -> remote
+      const pending = [];
+      for (const [day, entries] of Object.entries(local)) {
+        for (const e of entries) {
+          const row = remoteById.get(e.id);
+          if (!row || (e.updatedAt || 0) > (Number(row.updated_at) || 0)) pending.push([day, e]);
+        }
+      }
+
+      for (const [, e] of pending) {
+        if (e.photoId && !e.photoPath) {
+          try {
+            const blob = await getPhoto(e.photoId);
+            if (blob) { e.photoPath = await uploadPhoto(blob, e.id, s.user_id); touched = true; }
+          } catch (err) { console.warn('photo upload failed', err); }
+        }
+      }
+
+      if (pending.length) {
+        const payload = pending.map(([day, e]) => toRow(e, day, s.user_id));
+        for (let i = 0; i < payload.length; i += 200) {
+          await sbFetch('/rest/v1/entries?on_conflict=user_id,id', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+            body: JSON.stringify(payload.slice(i, i + 200))
+          });
+        }
+      }
+
+      if (touched || pending.length) { save(local); renderCalendar(); renderStats(); }
+
+      const name = loadName();
+      if (name) {
+        await sbFetch('/rest/v1/profiles?on_conflict=user_id', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+          body: JSON.stringify([{ user_id: s.user_id, name }])
+        }).catch(() => {});
+      }
+
+      writeKey('mood-journal-last-sync', String(Date.now()));
+      setCloudState('on', 'synced ✓');
+    } catch (err) {
+      console.warn('sync failed (' + reason + ')', err);
+      setCloudState('err', 'sync failed — will retry');
+    } finally {
+      syncing = false;
+    }
+  }
+
+  function queueSync() {
+    if (!getSession()) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => syncNow('queued'), 1200);
+  }
+
+  // ---- cloud bar ----
+  function setCloudState(state, text) {
+    const dot = document.getElementById('cloudDot');
+    dot.className = 'cloud-dot ' + (state || '');
+    document.getElementById('cloudText').textContent = text;
+  }
+  function renderCloudBar() {
+    const s = getSession();
+    const action = document.getElementById('cloudAction');
+    if (s) {
+      setCloudState('on', s.email || 'synced to the cloud');
+      action.textContent = 'sign out';
+      action.className = 'cloud-action ghost';
+    } else {
+      setCloudState('', 'saved on this phone only');
+      action.textContent = 'sign in';
+      action.className = 'cloud-action';
+    }
+  }
+
+  document.getElementById('cloudAction').addEventListener('click', () => {
+    const s = getSession();
+    if (s) {
+      if (!confirm('Sign out?\n\nYour journal stays on this phone — nothing is deleted.')) return;
+      clearSession();
+      renderCloudBar();
+      return;
+    }
+    document.getElementById('authMsg').textContent = '';
+    document.getElementById('authMsg').className = 'auth-msg';
+    showAuthStep('email');
+    document.getElementById('authBg').classList.add('open');
+    setTimeout(() => document.getElementById('authEmail').focus(), 120);
+  });
+
+  function showAuthStep(step) {
+    document.getElementById('authStepEmail').hidden = step !== 'email';
+    document.getElementById('authStepCode').hidden = step !== 'code';
+    document.getElementById('authTitle').textContent =
+      step === 'code' ? 'check your email' : 'save to the cloud';
+  }
+  function authMsg(text, kind) {
+    const el = document.getElementById('authMsg');
+    el.textContent = text;
+    el.className = 'auth-msg' + (kind ? ' ' + kind : '');
+  }
+  function closeAuth() { document.getElementById('authBg').classList.remove('open'); }
+
+  document.getElementById('authClose').addEventListener('click', closeAuth);
+  document.getElementById('authBg').addEventListener('click', e => {
+    if (e.target.id === 'authBg') closeAuth();
+  });
+  document.getElementById('authBack').addEventListener('click', () => {
+    authMsg('');
+    showAuthStep('email');
+  });
+
+  let pendingEmail = '';
+
+  document.getElementById('authSend').addEventListener('click', async () => {
+    const btn = document.getElementById('authSend');
+    const email = document.getElementById('authEmail').value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      return authMsg("That doesn't look like an email address.", 'err');
+    }
+    btn.disabled = true;
+    authMsg('sending…');
+    try {
+      const r = await fetch('/api/send-login-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'Could not send that.');
+      pendingEmail = email;
+      document.getElementById('authSentTo').textContent = email;
+      showAuthStep('code');
+      authMsg('');
+      setTimeout(() => document.getElementById('authCode').focus(), 120);
+    } catch (err) {
+      authMsg(err.message || 'Could not send that. Try again.', 'err');
+    }
+    btn.disabled = false;
+  });
+
+  document.getElementById('authVerify').addEventListener('click', async () => {
+    const btn = document.getElementById('authVerify');
+    const token = document.getElementById('authCode').value.replace(/\D/g, '');
+    if (token.length < 6) return authMsg('Type the code from the email.', 'err');
+    btn.disabled = true;
+    authMsg('checking…');
+    try {
+      const r = await fetch(SB_URL + '/auth/v1/verify', {
+        method: 'POST',
+        headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'magiclink', email: pendingEmail, token })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.access_token) {
+        throw new Error(d.msg || d.error_description || 'That code did not work. Check it and try again.');
+      }
+      setSession(sessionFrom(d, pendingEmail));
+      renderCloudBar();
+      authMsg('signed in — uploading your journal…', 'ok');
+      await syncNow('first sign-in');
+      closeAuth();
+    } catch (err) {
+      authMsg(err.message || 'That code did not work.', 'err');
+    }
+    btn.disabled = false;
+  });
+
+  document.getElementById('authCode').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('authVerify').click();
+  });
+  document.getElementById('authEmail').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('authSend').click();
+  });
+
+  function initCloud() {
+    renderCloudBar();
+    if (getSession()) syncNow('startup');
+    window.addEventListener('online', () => queueSync());
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) queueSync();
+    });
+  }
+
+  // ---- Init ----
+  (async function init() {
+    renderTodayHeader();
+    renderQuote();
+    buildEmojiGrid();
+    // Migration runs before the first render so nothing is drawn from stale v1.
+    try {
+      await migrateLegacy();
+    } catch (err) {
+      console.error('migration failed — falling back to the old data', err);
+    }
+    renderCalendar();
+    renderStats();
+    const savedName = loadName();
+    if (savedName) applyName(savedName);
+    else showOnboarding();
+    initCloud();
+  })();
 </script>
 </body>
 </html>
