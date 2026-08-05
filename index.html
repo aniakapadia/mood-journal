@@ -1065,10 +1065,7 @@
     <button class="settings-btn" id="settingsBtn" aria-label="settings" title="settings">⚙</button>
   </div>
 
-  <div class="storage-warn" id="storageWarn">
-    ⚠️ This phone's storage is full. Tap <strong>export my journal</strong> at the
-    bottom to save a backup file right now.
-  </div>
+  <div class="storage-warn" id="storageWarn"></div>
 
   <div class="header">
     <div class="date" id="todayDate">—</div>
@@ -1293,7 +1290,7 @@
 
 <script>
   const STORAGE_KEY = 'mood-journal-entries-v2';
-  const LEGACY_KEY  = 'mood-journal-entries-v1';   // kept forever as a safety net
+  const LEGACY_KEY  = 'mood-journal-entries-v1';   // released once v2 is proven
   const NAME_KEY = 'mood-journal-name-v1';
   const MOOD_EMOJI = {
     happy: '😊', joy: '😄', calm: '😌',
@@ -1335,31 +1332,90 @@
   }
   const HAS_LS = lsAvailable();
 
-  // Reads fall back to memoryStore whenever localStorage has nothing for the
-  // key — so a write that had to go to memory is still visible on read.
+  // Keys whose latest value only made it to memory. For these the disk copy is
+  // stale, so reading it back would resurrect old data and hide what was just
+  // saved — memory has to win.
+  const dirtyKeys = new Set();
+
   function readKey(key) {
+    if (dirtyKeys.has(key)) return memoryStore[key] != null ? memoryStore[key] : null;
     if (HAS_LS) {
       try {
         const v = localStorage.getItem(key);
         if (v !== null) return v;
       } catch {}
     }
-    return memoryStore[key] || null;
+    return memoryStore[key] != null ? memoryStore[key] : null;
   }
+
   function writeKey(key, value) {
     memoryStore[key] = value;
-    if (HAS_LS) {
-      try { localStorage.setItem(key, value); return true; }
-      catch (e) { warnStorageFull(); return false; }
+    if (!HAS_LS) { dirtyKeys.add(key); return false; }
+    try {
+      localStorage.setItem(key, value);
+      dirtyKeys.delete(key);
+      return true;
+    } catch (e) {
+      // Out of room. The v1 backup is by far the biggest thing in here and is
+      // redundant once migration has finished — drop it and try once more
+      // before giving up and telling the user.
+      if (releaseLegacyBackupSync()) {
+        try {
+          localStorage.setItem(key, value);
+          dirtyKeys.delete(key);
+          return true;
+        } catch {}
+      }
+      dirtyKeys.add(key);
+      warnStorageFull();
+      return false;
     }
-    return false;
+  }
+
+  // v1 stored every photo as base64 inside localStorage. Keeping it as a
+  // safety net sounded harmless, but browsers cap localStorage at roughly 5MB
+  // per site, and a handful of photos fills that on its own — which is what
+  // eventually made every new save fail. Once v2 holds at least as many
+  // entries, v1 is pure dead weight.
+  function legacyIsRedundant() {
+    let legacy;
+    try { legacy = localStorage.getItem(LEGACY_KEY); } catch { return false; }
+    if (!legacy) return false;
+    let v1;
+    try { v1 = JSON.parse(legacy); } catch { return true; }   // corrupt: no value as a backup
+    if (!v1 || typeof v1 !== 'object') return true;
+    let v2;
+    try { v2 = JSON.parse(readKey(STORAGE_KEY) || 'null'); } catch { return false; }
+    if (!v2 || typeof v2 !== 'object') return false;          // migration never completed
+    const count = o => Object.values(o).reduce((n, a) => n + (Array.isArray(a) ? a.length : 0), 0);
+    return count(v2) >= count(v1) && count(v1) > 0;
+  }
+
+  function releaseLegacyBackupSync() {
+    if (!legacyIsRedundant()) return false;
+    try { localStorage.removeItem(LEGACY_KEY); } catch { return false; }
+    delete memoryStore[LEGACY_KEY];
+    console.info('released the v1 backup to free localStorage');
+    return true;
   }
   function warnStorageFull() {
     if (storageWarned) return;
     storageWarned = true;
     console.warn('localStorage is full — journal text kept in memory for this session.');
     const el = document.getElementById('storageWarn');
-    if (el) el.classList.add('visible');
+    if (!el) return;
+    el.innerHTML =
+      "⚠️ <strong>This phone is out of room, so new entries may not be saved.</strong> " +
+      "Save a backup file now, then it's safe to clear some space." +
+      '<span class="warn-actions">' +
+      '<button type="button" class="warn-btn" id="warnFullExport">save a backup now</button>' +
+      '</span>';
+    el.className = 'storage-warn visible';
+    const b = el.querySelector('#warnFullExport');
+    if (b) b.addEventListener('click', () => {
+      openSettings();
+      setTimeout(() => document.getElementById('exportBtn').click(), 400);
+    });
   }
 
   // ---- Photo blobs live in IndexedDB ----
@@ -3878,57 +3934,62 @@
       const token = await freshToken();
       if (!token) { setCloudState('err', 'sign in again'); return; }
 
-      const local = load();
-      // Anything without an id (odd import, hand-edited data) gets one so it
-      // can take part in syncing instead of being silently skipped.
-      let repaired = false;
-      for (const entries of Object.values(local)) {
-        for (const e of entries) {
-          if (!e.id) { e.id = newId('e'); repaired = true; }
-          if (!e.updatedAt) { e.updatedAt = Date.parse(e.time) || Date.now(); repaired = true; }
-        }
-      }
-      if (repaired) save(local);
+      // Nothing read before a network call may ever be written back after it.
+      // Saving an entry takes barely a keystroke, but a sync round trip takes
+      // hundreds of milliseconds — so a snapshot taken before the fetch is
+      // already stale by the time it lands, and writing it back silently
+      // destroyed anything saved in between. Every load()/save() pair below is
+      // therefore fully synchronous, with no await between them.
 
+      // --- repair pass (synchronous) ---
+      {
+        const d = load();
+        let repaired = false;
+        for (const entries of Object.values(d)) {
+          for (const e of entries) {
+            if (!e.id) { e.id = newId('e'); repaired = true; }
+            if (!e.updatedAt) { e.updatedAt = Date.parse(e.time) || Date.now(); repaired = true; }
+          }
+        }
+        if (repaired) save(d);
+      }
+
+      // --- network: what does the cloud have? ---
       const rows = await (await sbFetch('/rest/v1/entries?select=*')).json();
       const remoteById = new Map(rows.map(r => [r.id, r]));
 
-      // remote -> local (add or update; never delete)
-      let touched = false;
-      for (const row of rows) {
-        const day = row.day;
-        if (!local[day]) local[day] = [];
-        const idx = local[day].findIndex(e => e.id === row.id);
-        if (idx === -1) {
-          local[day].push(fromRow(row));
-          touched = true;
-        } else if ((Number(row.updated_at) || 0) > (local[day][idx].updatedAt || 0)) {
-          // keep a local photoId if we already have the blob cached
-          const keepId = local[day][idx].photoId;
-          local[day][idx] = fromRow(row);
-          if (keepId) local[day][idx].photoId = keepId;
-          touched = true;
-        }
-      }
-
-      // local -> remote
+      // --- decide what to push, from whatever is local right now ---
       const pending = [];
-      for (const [day, entries] of Object.entries(local)) {
-        for (const e of entries) {
-          const row = remoteById.get(e.id);
-          if (!row || (e.updatedAt || 0) > (Number(row.updated_at) || 0)) pending.push([day, e]);
+      {
+        const d = load();
+        for (const [day, entries] of Object.entries(d)) {
+          for (const e of entries) {
+            const row = remoteById.get(e.id);
+            if (!row || (e.updatedAt || 0) > (Number(row.updated_at) || 0)) {
+              pending.push([day, { ...e }]);       // copy: the live object may be replaced
+            }
+          }
         }
       }
 
+      // --- network: upload any photos that aren't in the cloud yet ---
+      // Paths are collected rather than written straight onto the entries,
+      // because those objects belong to a snapshot we are about to discard.
+      const uploadedPaths = new Map();
       for (const [, e] of pending) {
         if (e.photoId && !e.photoPath) {
           try {
             const blob = await getPhoto(e.photoId);
-            if (blob) { e.photoPath = await uploadPhoto(blob, e.id, s.user_id); touched = true; }
+            if (blob) {
+              const path = await uploadPhoto(blob, e.id, s.user_id);
+              e.photoPath = path;
+              uploadedPaths.set(e.id, path);
+            }
           } catch (err) { console.warn('photo upload failed', err); }
         }
       }
 
+      // --- network: push rows ---
       if (pending.length) {
         const payload = pending.map(([day, e]) => toRow(e, day, s.user_id));
         for (let i = 0; i < payload.length; i += 200) {
@@ -3940,7 +4001,40 @@
         }
       }
 
-      if (touched || pending.length) { save(local); renderCalendar(); renderStats(); }
+      // --- apply results to the CURRENT local data (synchronous) ---
+      // Re-read here, after every await above, so anything saved during the
+      // sync is still present and simply gets merged into.
+      let touched = false;
+      {
+        const fresh = load();
+
+        for (const entries of Object.values(fresh)) {
+          for (const e of entries) {
+            if (uploadedPaths.has(e.id) && !e.photoPath) {
+              e.photoPath = uploadedPaths.get(e.id);
+              touched = true;
+            }
+          }
+        }
+
+        // remote -> local (add or update; never delete)
+        for (const row of rows) {
+          const day = row.day;
+          if (!fresh[day]) fresh[day] = [];
+          const idx = fresh[day].findIndex(e => e.id === row.id);
+          if (idx === -1) {
+            fresh[day].push(fromRow(row));
+            touched = true;
+          } else if ((Number(row.updated_at) || 0) > (fresh[day][idx].updatedAt || 0)) {
+            const keepId = fresh[day][idx].photoId;   // keep the cached blob
+            fresh[day][idx] = fromRow(row);
+            if (keepId) fresh[day][idx].photoId = keepId;
+            touched = true;
+          }
+        }
+
+        if (touched) { save(fresh); renderCalendar(); renderStats(); }
+      }
 
       const name = loadName();
       if (name) {
@@ -4107,6 +4201,10 @@
     } catch (err) {
       console.error('migration failed — falling back to the old data', err);
     }
+    // Reclaim the space the old base64 backup is sitting on, now that v2 is
+    // in place. Without this, saves start failing once the two together
+    // exceed the storage budget.
+    releaseLegacyBackupSync();
     renderCalendar();
     renderStats();
     const savedName = loadName();
