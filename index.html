@@ -1482,6 +1482,42 @@
     return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
   }
 
+  // An id derived from the entry's own content, so the same entry always gets
+  // the same id no matter how many times it is migrated or imported. Random
+  // ids made migration non-idempotent: when a save failed, migration re-ran on
+  // the next load, minted fresh ids, and sync uploaded a whole second copy —
+  // which is how one journal ended up with sixteen of everything.
+  function stableEntryId(day, e) {
+    const basis = day + '|' + (e.time || '') + '|' + (e.mood || '') + '|' +
+                  (e.emoji || '') + '|' + (e.note || '');
+    let h1 = 0x811c9dc5, h2 = 0x01000193;
+    for (let i = 0; i < basis.length; i++) {
+      const c = basis.charCodeAt(i);
+      h1 = Math.imul(h1 ^ c, 16777619) >>> 0;
+      h2 = (Math.imul(h2 + c, 2246822519) ^ (h1 >>> 7)) >>> 0;
+    }
+    return 'e_' + h1.toString(36) + h2.toString(36);
+  }
+
+  // Timestamps arrive in two shapes — the browser writes 2026-08-03T12:25:33.000Z
+  // and Postgres returns 2026-08-03T12:25:33+00:00 — so they have to be
+  // compared as instants, not as strings.
+  function timeKey(t) {
+    const n = Date.parse(t);
+    return Number.isFinite(n) ? String(n) : String(t || '');
+  }
+  function momentKey(day, e) {
+    return day + '|' + timeKey(e.time) + '|' + (e.mood || '') + '|' + (e.note || '');
+  }
+
+  // Same identity test the importer uses: two entries are the same moment if
+  // the timestamp, mood and note all match, whatever their ids say.
+  function sameMoment(a, b) {
+    return timeKey(a.time) === timeKey(b.time) &&
+           a.mood === b.mood &&
+           (a.note || '') === (b.note || '');
+  }
+
   function isQuotaError(err) {
     if (!err) return false;
     const n = err.name || '';
@@ -1707,7 +1743,7 @@
       out[day] = [];
       for (const e of entries) {
         const n = {
-          id: newId('e'),
+          id: stableEntryId(day, e),      // deterministic: re-running can't duplicate
           mood: e.mood,
           note: e.note || '',
           time: e.time,
@@ -3767,9 +3803,10 @@
         if (!Array.isArray(entries)) continue;
         if (!data[day]) data[day] = [];
         for (const e of entries) {
-          // Same moment + same mood = same entry. Skip rather than duplicate.
-          const dupe = data[day].some(x =>
-            (e.id && x.id === e.id) || (x.time === e.time && x.mood === e.mood));
+          // Same moment = same entry. Skip rather than duplicate. Compared as
+          // instants, since a file can hold both the browser's and Postgres's
+          // timestamp formats for the same entry.
+          const dupe = data[day].some(x => (e.id && x.id === e.id) || sameMoment(x, e));
           if (dupe) continue;
           const n = {
             id: e.id || newId('e'),
@@ -3962,12 +3999,20 @@
       const pending = [];
       {
         const d = load();
+        // Moments the cloud already holds, whatever id they carry there, so a
+        // locally-renumbered entry isn't uploaded as yet another duplicate.
+        const remoteMoments = new Set(
+          rows.map(r => momentKey(r.day, { time: r.entry_time, mood: r.mood, note: r.note }))
+        );
         for (const [day, entries] of Object.entries(d)) {
           for (const e of entries) {
             const row = remoteById.get(e.id);
-            if (!row || (e.updatedAt || 0) > (Number(row.updated_at) || 0)) {
-              pending.push([day, { ...e }]);       // copy: the live object may be replaced
+            if (row) {
+              if ((e.updatedAt || 0) > (Number(row.updated_at) || 0)) pending.push([day, { ...e }]);
+              continue;
             }
+            if (remoteMoments.has(momentKey(day, e))) continue;   // already up there under another id
+            pending.push([day, { ...e }]);             // copy: the live object may be replaced
           }
         }
       }
@@ -4023,7 +4068,20 @@
           if (!fresh[day]) fresh[day] = [];
           const idx = fresh[day].findIndex(e => e.id === row.id);
           if (idx === -1) {
-            fresh[day].push(fromRow(row));
+            // An unfamiliar id can still be the same entry: earlier versions
+            // minted a random id every migration, so the cloud may hold many
+            // copies of one moment. Take anything useful off the duplicate,
+            // but never add a second copy of it.
+            const incoming = fromRow(row);
+            const twin = fresh[day].find(e => sameMoment(e, incoming));
+            if (twin) {
+              if (incoming.photoPath && !twin.photoPath) {
+                twin.photoPath = incoming.photoPath;
+                touched = true;
+              }
+              continue;
+            }
+            fresh[day].push(incoming);
             touched = true;
           } else if ((Number(row.updated_at) || 0) > (fresh[day][idx].updatedAt || 0)) {
             const keepId = fresh[day][idx].photoId;   // keep the cached blob
