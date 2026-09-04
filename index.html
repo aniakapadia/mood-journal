@@ -3143,11 +3143,11 @@
   function drawLashes(ctx, f, spec) {
     if (!spec) return;
     const lids = [f.lidL, f.lidR];
-    const len = (spec.length == null ? 1 : spec.length) * f.size * 0.036;
-    const thick = (spec.thickness == null ? 1 : spec.thickness) * f.size * 0.0027;
+    const len = (spec.length == null ? 1 : spec.length) * f.size * 0.052;
+    const thick = (spec.thickness == null ? 1 : spec.thickness) * f.size * 0.0012;
     ctx.save();
     ctx.lineCap = 'round';
-    ctx.strokeStyle = spec.color || 'rgba(26,18,16,0.70)';
+    ctx.strokeStyle = spec.color || 'rgba(24,16,14,0.78)';
     lids.forEach(lid => {
       if (!lid || lid.length < 4) return;
       // eye centre, used to work out which way is "away from the eye"
@@ -3171,7 +3171,7 @@
         const bx = (lid[0].x - cx) / (Math.hypot(lid[0].x - cx, lid[0].y - cy) || 1);
         const by = (lid[0].y - cy) / (Math.hypot(lid[0].x - cx, lid[0].y - cy) || 1);
 
-        for (let k = -2.5; k <= 2.5; k += 0.625) {
+        for (let k = -2.5; k <= 2.5; k += 0.4) {
           const jitter = k * 0.16;
           const sx = p.x + (q.x - p.x) * (0.5 + jitter * 0.5);
           const sy = p.y + (q.y - p.y) * (0.5 + jitter * 0.5);
