@@ -2219,6 +2219,9 @@
   const FILTERS = [
     { id: 'none', label: 'none', icon: '🚫', draw: null },
 
+    { id: 'puffy',    label: 'puffy',     icon: '\u{1F421}', draw: null },
+    { id: 'stretch',  label: 'stretchy',  icon: '\u{1F97A}', draw: null },
+    { id: 'slim',     label: 'slim',      icon: '\u{1FAE5}', draw: null },
     { id: 'bigeyes',  label: 'big eyes',  icon: '\u{1F440}', draw: null },
     { id: 'puppy',    label: 'puppy eyes',icon: '\u{1F97A}', draw: null },
     { id: 'chipmunk', label: 'chipmunk',  icon: '\u{1F43F}\uFE0F', draw: null },
@@ -2964,7 +2967,7 @@
   // the edge away, so a bigger eye melts into the face with no visible seam.
   const _warpBuf = document.createElement('canvas');
   const _warpCtx = _warpBuf.getContext('2d');
-  function bulge(ctx, src, cx, cy, radius, amount, feather) {
+  function bulge(ctx, src, cx, cy, radius, amount, feather, amountY) {
     const r = Math.max(6, radius);
     const size = Math.max(8, Math.ceil(r * 2));
     if (_warpBuf.width !== size || _warpBuf.height !== size) {
@@ -2974,9 +2977,12 @@
     _warpCtx.clearRect(0, 0, size, size);
     _warpCtx.globalCompositeOperation = 'source-over';
 
-    // sampling a smaller area and painting it large is what magnifies
-    const s = r / amount;
-    _warpCtx.drawImage(src, cx - s, cy - s, s * 2, s * 2, 0, 0, size, size);
+    // Sampling a smaller area and painting it large is what magnifies. Doing
+    // it by a different factor per axis is what makes a face read as wider or
+    // narrower rather than simply bigger.
+    const sx = r / amount;
+    const sy = r / (amountY == null ? amount : amountY);
+    _warpCtx.drawImage(src, cx - sx, cy - sy, sx * 2, sy * 2, 0, 0, size, size);
 
     _warpCtx.globalCompositeOperation = 'destination-in';
     const g = _warpCtx.createRadialGradient(r, r, r * (feather == null ? 0.5 : feather), r, r, r);
@@ -2993,7 +2999,7 @@
     const w = f.size;
     for (const it of spec) {
       const p = anchorPoint(f, it.at);
-      bulge(ctx, src, p.x, p.y, w * it.r, it.amount, it.feather);
+      bulge(ctx, src, p.x, p.y, w * it.r, it.amount, it.feather, it.amountY);
     }
   }
 
@@ -3104,6 +3110,12 @@
     mustache: { grade: { tint: '#C8A87A', alpha: 0.30, vignette: 0.30, blend: 'color' } },
 
     // ---- warp-led lenses: these change the face rather than decorate it ----
+    puffy:    { warp: [{ at: 'face', r: 0.70, amount: 1.30, amountY: 1.02, feather: 0.62 }],
+                grade: { tint: '#FFE0C0', alpha: 0.14 } },
+    stretch:  { warp: [{ at: 'face', r: 0.72, amount: 0.86, amountY: 1.26, feather: 0.62 }],
+                grade: { tint: '#DCE8FF', alpha: 0.12 } },
+    slim:     { warp: [{ at: 'face', r: 0.70, amount: 0.80, amountY: 1.02, feather: 0.62 }],
+                grade: { tint: '#E8E0FF', alpha: 0.12 } },
     bigeyes:  { warp: [{ at: 'eyeL', r: 0.19, amount: 1.75 }, { at: 'eyeR', r: 0.19, amount: 1.75 }],
                 grade: { tint: '#FFE8F2', alpha: 0.16, glow: 0.08 } },
     puppy:    { warp: [{ at: 'eyeL', r: 0.20, amount: 1.6 }, { at: 'eyeR', r: 0.20, amount: 1.6 },
