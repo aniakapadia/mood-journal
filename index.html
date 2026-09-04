@@ -2219,6 +2219,7 @@
   const FILTERS = [
     { id: 'none', label: 'none', icon: '🚫', draw: null },
 
+    { id: 'glow',     label: 'glow up',   icon: '\u{1F4AB}', draw: null },
     { id: 'puffy',    label: 'puffy',     icon: '\u{1F421}', draw: null },
     { id: 'stretch',  label: 'stretchy',  icon: '\u{1F97A}', draw: null },
     { id: 'slim',     label: 'slim',      icon: '\u{1FAE5}', draw: null },
@@ -2331,7 +2332,7 @@
       [-1, 1].forEach(side => {
         const cx = side * a.cheekDX * 0.9, cy = a.cheekY;
         const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, a.w * 0.25);
-        g.addColorStop(0, 'rgba(244,132,146,0.30)');
+        g.addColorStop(0, 'rgba(244,132,146,0.22)');
         g.addColorStop(0.6, 'rgba(244,132,146,0.12)');
         g.addColorStop(1, 'rgba(244,132,146,0)');
         ctx.fillStyle = g;
@@ -2370,8 +2371,8 @@
           const exR = (x - a.eyeDX) / (a.w * 0.17), eyR = (y - a.eyeY) / (a.h * 0.075);
           if (exL * exL + eyL * eyL < 1 || exR * exR + eyR * eyR < 1) continue;
 
-          const size = a.w * (0.0030 + r() * 0.0060);
-          const alpha = (0.20 + r() * 0.40) * (1 - rad * 0.30);
+          const size = a.w * (0.0026 + r() * 0.0050);
+          const alpha = (0.11 + r() * 0.24) * (1 - rad * 0.30);
           ctx.fillStyle = 'rgba(' + tones[(r() * 4) | 0] + ',' + alpha.toFixed(2) + ')';
           ctx.beginPath();
           ctx.ellipse(x, y, size, size * (0.8 + r() * 0.4), r() * 3, 0, 7);
@@ -2926,6 +2927,9 @@
     cheekL: 234, cheekR: 454, top: 10, chin: 152,
     mouthL: 61, mouthR: 291, lipTop: 13, lipBot: 14
   };
+  // the inner lip ring — the opening of the mouth, i.e. exactly the teeth
+  const LIP_INNER = [78, 95, 88, 178, 87, 14, 317, 402, 318, 324,
+                     308, 415, 310, 311, 312, 13, 82, 81, 80, 191];
 
   // Landmarks -> the same {cx, cy, size, rot, ...} frame the filters already
   // understand, so tracked and manual paths share one drawing pipeline.
@@ -2968,14 +2972,23 @@
       noseY: n.y,
       mouthY: mc.y,
       mouthHalfW: dist(mL, mR) / 2,
+      mouthPoly: LIP_INNER.map(i => P(i)),
       mouthOpen
     };
   }
 
   // Low-pass filter: raw landmarks jitter a few px per frame, which reads as
   // the filter vibrating on your face.
-  function smoothFrame(prev, next, alpha) {
+  // A fixed smoothing factor forces a bad trade: smooth enough to stop the
+  // jitter means the lens visibly trails your face when you move, which is
+  // what makes freckles look like they are floating rather than on your skin.
+  // So the factor adapts — barely smoothed while you move, heavily smoothed
+  // while you hold still.
+  function smoothFrame(prev, next, base) {
     if (!prev) return next;
+    const travelled = Math.hypot(next.cx - prev.cx, next.cy - prev.cy) / (next.size || 1);
+    const scaled = Math.abs(next.size - prev.size) / (next.size || 1);
+    const alpha = Math.min(1, base + (travelled + scaled) * 7);
     const out = {};
     for (const k in next) {
       out[k] = (typeof next[k] === 'number' && typeof prev[k] === 'number')
@@ -3075,6 +3088,48 @@
     ctx.restore();
   }
 
+
+  // Whitens only what is inside the lip opening, so it brightens teeth and
+  // not the lips around them. Skipped entirely when the mouth is shut.
+  function whitenTeeth(ctx, src, f, spec) {
+    if (!spec || !f.mouthPoly || f.mouthPoly.length < 6) return;
+    if ((f.mouthOpen || 0) < 0.04) return;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const p of f.mouthPoly) {
+      if (p.x < x0) x0 = p.x; if (p.x > x1) x1 = p.x;
+      if (p.y < y0) y0 = p.y; if (p.y > y1) y1 = p.y;
+    }
+    const w = x1 - x0, hgt = y1 - y0;
+    if (!(w > 2 && hgt > 2)) return;
+    ctx.save();
+    ctx.beginPath();
+    f.mouthPoly.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+    ctx.closePath();
+    ctx.clip();
+    ctx.filter = 'brightness(' + (1 + (spec.brighten == null ? 0.28 : spec.brighten)) +
+                 ') saturate(' + (spec.sat == null ? 0.35 : spec.sat) + ')';
+    ctx.drawImage(src, x0, y0, w, hgt, x0, y0, w, hgt);
+    ctx.filter = 'none';
+    ctx.restore();
+  }
+
+  // A gentle lift on the eyes — the last piece of a brightening lens.
+  function brightenEyes(ctx, f, amount) {
+    if (!amount) return;
+    const a = anchors(f);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    [-1, 1].forEach(side => {
+      const p = anchorPoint(f, side < 0 ? 'eyeL' : 'eyeR');
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, a.eyeR * 2.1);
+      g.addColorStop(0, 'rgba(255,255,255,' + amount + ')');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(p.x, p.y, a.eyeR * 2.1, 0, 7); ctx.fill();
+    });
+    ctx.restore();
+  }
+
   function applyWarps(ctx, src, f, spec) {
     if (!spec || !spec.length) return;
     const w = f.size;
@@ -3163,8 +3218,9 @@
     bunny: { warp: [{ at: 'eyeL', r: 0.15, amount: 1.18 }, { at: 'eyeR', r: 0.15, amount: 1.18 }],
              grade: { tint: '#FFE6F0', alpha: 0.20 } },
     cat: { grade: { tint: '#FFE0B8', alpha: 0.18, vignette: 0.16 } },
-    freckles: { beauty: { smooth: 0.44, brighten: 0.15 },
-                grade: { tint: '#FFD8A4', alpha: 0.24, glow: 0.16 } },
+    freckles: { beauty: { smooth: 0.46, brighten: 0.16, eyes: 0.10,
+                          teeth: { brighten: 0.26, sat: 0.38 } },
+                grade: { tint: '#FFD8A4', alpha: 0.22, glow: 0.16 } },
     blush: { warp: [{ at: 'cheekL', r: 0.19, amount: 1.10 }, { at: 'cheekR', r: 0.19, amount: 1.10 }],
              grade: { tint: '#FFC3D6', alpha: 0.26, glow: 0.10 } },
     hearteyes: { grade: { tint: '#FF9EC0', alpha: 0.28, glow: 0.12 },
@@ -3198,6 +3254,9 @@
                 grade: { tint: '#DCE8FF', alpha: 0.12 } },
     slim:     { warp: [{ at: 'face', r: 0.70, amount: 0.80, amountY: 1.02, feather: 0.62 }],
                 grade: { tint: '#E8E0FF', alpha: 0.12 } },
+    glow:     { beauty: { smooth: 0.58, brighten: 0.20, eyes: 0.16,
+                          teeth: { brighten: 0.34, sat: 0.30 } },
+                grade: { tint: '#FFEBD6', alpha: 0.20, glow: 0.18 } },
     bigeyes:  { warp: [{ at: 'eyeL', r: 0.19, amount: 1.75 }, { at: 'eyeR', r: 0.19, amount: 1.75 }],
                 grade: { tint: '#FFE8F2', alpha: 0.16, glow: 0.08 } },
     puppy:    { warp: [{ at: 'eyeL', r: 0.20, amount: 1.6 }, { at: 'eyeR', r: 0.20, amount: 1.6 },
@@ -3224,7 +3283,11 @@
     const fx = FILTER_FX[filterId];
     if (frame && fx && fx.warp) applyWarps(ctx, source, frame, fx.warp);
     // before the overlay art, so it smooths skin and not the freckles
-    if (frame && fx && fx.beauty) softSkin(ctx, source, frame, fx.beauty);
+    if (frame && fx && fx.beauty) {
+      softSkin(ctx, source, frame, fx.beauty);
+      whitenTeeth(ctx, source, frame, fx.beauty.teeth);
+      brightenEyes(ctx, frame, fx.beauty.eyes);
+    }
     if (fx) applyGrade(ctx, srcW, srcH, fx.grade);
     if (frame) paintFilter(ctx, filterId, { ...frame, t });
     if (fx) drawParticles(ctx, srcW, srcH, fx.particles, t);
@@ -3252,7 +3315,7 @@
       frame: null,
       raf: 0,
       lastDetect: 0,
-      detectEvery: 60,          // ms between inferences; render stays at 60fps
+      detectEvery: 22,          // skin-level effects need tight sync, so run hot
       t0: performance.now(),
       busy: false
     };
@@ -3347,7 +3410,7 @@
         const L = tracker.detectVideo(v, now);
         if (L) {
           const raw = frameFromLandmarks(L, v.videoWidth, v.videoHeight);
-          cam.frame = smoothFrame(cam.frame, raw, 0.45);
+          cam.frame = smoothFrame(cam.frame, raw, 0.32);
           cam.lastSeen = now;
           if (!cam.everSeen) { cam.everSeen = true; setCamStatus(''); }
         } else if (now - (cam.lastSeen || 0) > 900) {
