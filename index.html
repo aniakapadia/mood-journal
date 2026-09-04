@@ -3136,59 +3136,84 @@
   }
 
 
-  // Lashes are drawn along the real upper eyelid rather than guessed from the
+  // One tapered hair: filled rather than stroked, wide at the root and coming
+  // to a point at the tip. A constant-width stroke with a rounded end is what
+  // makes drawn lashes look like crayon marks, however thin you make them —
+  // real hairs taper.
+  function taperedHair(ctx, sx, sy, cx, cy, ex, ey, rootWidth) {
+    const STEPS = 7;
+    const left = [], right = [];
+    for (let i = 0; i <= STEPS; i++) {
+      const t = i / STEPS, mt = 1 - t;
+      const x = mt * mt * sx + 2 * mt * t * cx + t * t * ex;
+      const y = mt * mt * sy + 2 * mt * t * cy + t * t * ey;
+      let dx = 2 * mt * (cx - sx) + 2 * t * (ex - cx);
+      let dy = 2 * mt * (cy - sy) + 2 * t * (ey - cy);
+      const l = Math.hypot(dx, dy) || 1;
+      const nx = -dy / l, ny = dx / l;
+      const w = rootWidth * (1 - t) * (1 - t) ;      // thick at root, point at tip
+      left.push(x + nx * w, y + ny * w);
+      right.push(x - nx * w, y - ny * w);
+    }
+    ctx.beginPath();
+    ctx.moveTo(left[0], left[1]);
+    for (let i = 2; i < left.length; i += 2) ctx.lineTo(left[i], left[i + 1]);
+    for (let i = right.length - 2; i >= 0; i -= 2) ctx.lineTo(right[i], right[i + 1]);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Lashes follow the real upper eyelid rather than being estimated from the
   // iris, so they sit on the lash line whatever shape the eye is and however
-  // the head is tilted. They lengthen towards the outer corner, the way both
-  // real lashes and mascara do.
+  // the head is tilted, and lengthen towards the outer corner.
   function drawLashes(ctx, f, spec) {
     if (!spec) return;
     const lids = [f.lidL, f.lidR];
     const len = (spec.length == null ? 1 : spec.length) * f.size * 0.052;
-    const thick = (spec.thickness == null ? 1 : spec.thickness) * f.size * 0.0012;
+    const root = (spec.thickness == null ? 1 : spec.thickness) * f.size * 0.0011;
     ctx.save();
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = spec.color || 'rgba(24,16,14,0.78)';
+    ctx.fillStyle = spec.color || 'rgba(24,16,14,0.72)';
     lids.forEach(lid => {
       if (!lid || lid.length < 4) return;
-      // eye centre, used to work out which way is "away from the eye"
       let cx = 0, cy = 0;
       lid.forEach(p => { cx += p.x; cy += p.y; });
       cx /= lid.length; cy /= lid.length;
 
       for (let i = 0; i < lid.length - 1; i++) {
         const p = lid[i], q = lid[i + 1];
-        // outward normal, flipped to always point away from the eye
         let nx = -(q.y - p.y), ny = q.x - p.x;
         const nl = Math.hypot(nx, ny) || 1;
         nx /= nl; ny /= nl;
         if ((p.x - cx) * nx + (p.y - cy) * ny < 0) { nx = -nx; ny = -ny; }
 
-        // longest a third of the way in from the outer corner, tapering inward
         const t = i / (lid.length - 1);
         const grow = Math.max(0.25, 1 - Math.abs(t - 0.22) * 1.35);
         const L = len * grow;
-        // curl back towards the outer corner
-        const bx = (lid[0].x - cx) / (Math.hypot(lid[0].x - cx, lid[0].y - cy) || 1);
-        const by = (lid[0].y - cy) / (Math.hypot(lid[0].x - cx, lid[0].y - cy) || 1);
+        const bl = Math.hypot(lid[0].x - cx, lid[0].y - cy) || 1;
+        const bx = (lid[0].x - cx) / bl, by = (lid[0].y - cy) / bl;
 
         for (let k = -2.5; k <= 2.5; k += 0.4) {
           const jitter = k * 0.16;
+          const wob = 0.85 + ((k * 37) % 7) / 20;          // no two hairs identical
           const sx = p.x + (q.x - p.x) * (0.5 + jitter * 0.5);
           const sy = p.y + (q.y - p.y) * (0.5 + jitter * 0.5);
-          const ex = sx + nx * L * 0.72 + bx * L * 0.62;
-          const ey = sy + ny * L * 0.72 + by * L * 0.62;
-          ctx.lineWidth = thick * grow;
-          ctx.beginPath();
-          ctx.moveTo(sx, sy);
-          ctx.quadraticCurveTo(sx + nx * L * 0.55, sy + ny * L * 0.55, ex, ey);
-          ctx.stroke();
+          const Lk = L * wob;
+          const ex = sx + nx * Lk * 0.72 + bx * Lk * 0.62;
+          const ey = sy + ny * Lk * 0.72 + by * Lk * 0.62;
+          taperedHair(ctx, sx, sy,
+                      sx + nx * Lk * 0.55, sy + ny * Lk * 0.55,
+                      ex, ey, root * grow);
         }
       }
-      // a soft lash line so the roots don't look like floating hairs
-      ctx.lineWidth = thick * 0.9;
+      // the faintest line along the lid, just to seat the roots
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      ctx.strokeStyle = ctx.fillStyle;
+      ctx.lineWidth = root * 1.1;
       ctx.beginPath();
       lid.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
       ctx.stroke();
+      ctx.restore();
     });
     ctx.restore();
   }
