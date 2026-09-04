@@ -2350,9 +2350,9 @@
       // than one band, which is what stops them clumping into a blotch in the
       // middle and leaving the cheeks bare.
       const zones = [
-        { x: 0,                    y: a.noseY - a.h * 0.015, rx: a.w * 0.135, ry: a.h * 0.075, n: 60 },
-        { x: -a.cheekDX * 0.84,    y: a.cheekY + a.h * 0.01, rx: a.w * 0.205, ry: a.h * 0.125, n: 100 },
-        { x:  a.cheekDX * 0.84,    y: a.cheekY + a.h * 0.01, rx: a.w * 0.205, ry: a.h * 0.125, n: 100 }
+        { x: 0,                 y: a.noseY - a.h * 0.055, rx: a.w * 0.150, ry: a.h * 0.105, n: 78 },
+        { x: -a.cheekDX * 0.80, y: a.cheekY - a.h * 0.030, rx: a.w * 0.225, ry: a.h * 0.145, n: 124 },
+        { x:  a.cheekDX * 0.80, y: a.cheekY - a.h * 0.030, rx: a.w * 0.225, ry: a.h * 0.145, n: 124 }
       ];
       const tones = ['150,96,62', '130,80,50', '168,112,74', '116,70,44'];
       zones.forEach(z => {
@@ -2371,8 +2371,8 @@
           const exR = (x - a.eyeDX) / (a.w * 0.17), eyR = (y - a.eyeY) / (a.h * 0.075);
           if (exL * exL + eyL * eyL < 1 || exR * exR + eyR * eyR < 1) continue;
 
-          const size = a.w * (0.0026 + r() * 0.0050);
-          const alpha = (0.11 + r() * 0.24) * (1 - rad * 0.30);
+          const size = a.w * (0.0030 + r() * 0.0056);
+          const alpha = (0.22 + r() * 0.30) * (1 - rad * 0.28);
           ctx.fillStyle = 'rgba(' + tones[(r() * 4) | 0] + ',' + alpha.toFixed(2) + ')';
           ctx.beginPath();
           ctx.ellipse(x, y, size, size * (0.8 + r() * 0.4), r() * 3, 0, 7);
@@ -3222,9 +3222,9 @@
     // Tuned towards real skin rather than a beauty filter: most of the
     // smoothing and nearly all of the bloom removed, so freckles sit on skin
     // that still has its own texture instead of on a lit, flattened surface.
-    freckles: { beauty: { smooth: 0.24, brighten: 0.06, eyes: 0.06,
-                          teeth: { brighten: 0.20, sat: 0.45 } },
-                grade: { tint: '#FFEAD6', alpha: 0.11, glow: 0.03 } },
+    freckles: { beauty: { smooth: 0.32, brighten: 0.07, eyes: 0.07,
+                          teeth: { brighten: 0.30, sat: 0.34 } },
+                grade: { tint: '#FFEAD6', alpha: 0.13, glow: 0.03 } },
     blush: { warp: [{ at: 'cheekL', r: 0.19, amount: 1.10 }, { at: 'cheekR', r: 0.19, amount: 1.10 }],
              grade: { tint: '#FFC3D6', alpha: 0.26, glow: 0.10 } },
     hearteyes: { grade: { tint: '#FF9EC0', alpha: 0.28, glow: 0.12 },
