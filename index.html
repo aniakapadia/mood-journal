@@ -2322,17 +2322,63 @@
       whiskers(ctx, a, 'rgba(255,255,255,0.95)', 'rgba(0,0,0,0.2)');
     }},
 
-    { id: 'freckles', label: 'freckles', icon: '🫧', draw(ctx, a) {
-      const r = rng(7);
-      for (let i = 0; i < 58; i++) {
-        const side = i % 2 ? 1 : -1;
-        const t = r();
-        const x = side * (a.w * 0.05 + t * a.w * 0.30);
-        const y = a.noseY - a.h * 0.045 + (r() - 0.5) * a.h * 0.20;
-        const rad = a.w * (0.005 + r() * 0.0085);
-        ctx.fillStyle = ['rgba(146,88,52,', 'rgba(120,70,42,', 'rgba(168,105,64,'][i % 3] + (0.3 + r() * 0.45) + ')';
-        ctx.beginPath(); ctx.arc(x, y, rad, 0, 7); ctx.fill();
-      }
+    { id: 'freckles', label: 'freckles', icon: '\u{1FAE7}', draw(ctx, a) {
+      const r = rng(97);
+
+      // Sun-kissed blush first, sitting under the freckles. Real freckled
+      // faces are flushed across the same band, and without this the dots
+      // look pasted on.
+      [-1, 1].forEach(side => {
+        const cx = side * a.cheekDX * 0.9, cy = a.cheekY;
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, a.w * 0.25);
+        g.addColorStop(0, 'rgba(244,132,146,0.30)');
+        g.addColorStop(0.6, 'rgba(244,132,146,0.12)');
+        g.addColorStop(1, 'rgba(244,132,146,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(cx, cy, a.w * 0.25, 0, 7); ctx.fill();
+      });
+      // a warm wash over the bridge, tying the two cheeks together
+      const ny = a.noseY - a.h * 0.02;
+      const nb = ctx.createRadialGradient(0, ny, 0, 0, ny, a.w * 0.21);
+      nb.addColorStop(0, 'rgba(242,146,132,0.22)');
+      nb.addColorStop(1, 'rgba(242,146,132,0)');
+      ctx.fillStyle = nb;
+      ctx.beginPath(); ctx.arc(0, ny, a.w * 0.21, 0, 7); ctx.fill();
+
+      // Freckles sit in three patches — the bridge and each cheek — rather
+      // than one band, which is what stops them clumping into a blotch in the
+      // middle and leaving the cheeks bare.
+      const zones = [
+        { x: 0,                    y: a.noseY - a.h * 0.015, rx: a.w * 0.135, ry: a.h * 0.075, n: 60 },
+        { x: -a.cheekDX * 0.84,    y: a.cheekY + a.h * 0.01, rx: a.w * 0.205, ry: a.h * 0.125, n: 100 },
+        { x:  a.cheekDX * 0.84,    y: a.cheekY + a.h * 0.01, rx: a.w * 0.205, ry: a.h * 0.125, n: 100 }
+      ];
+      const tones = ['150,96,62', '130,80,50', '168,112,74', '116,70,44'];
+      zones.forEach(z => {
+        let placed = 0, guard = 0;
+        while (placed < z.n && guard < z.n * 22) {
+          guard++;
+          // uniform over the ellipse, then thinned towards its edge so the
+          // patch fades out instead of stopping at a hard rim
+          const ang = r() * Math.PI * 2;
+          const rad = Math.sqrt(r());
+          const x = z.x + Math.cos(ang) * z.rx * rad;
+          const y = z.y + Math.sin(ang) * z.ry * rad;
+          if (r() < rad * 0.55) continue;
+
+          const exL = (x + a.eyeDX) / (a.w * 0.17), eyL = (y - a.eyeY) / (a.h * 0.075);
+          const exR = (x - a.eyeDX) / (a.w * 0.17), eyR = (y - a.eyeY) / (a.h * 0.075);
+          if (exL * exL + eyL * eyL < 1 || exR * exR + eyR * eyR < 1) continue;
+
+          const size = a.w * (0.0030 + r() * 0.0060);
+          const alpha = (0.20 + r() * 0.40) * (1 - rad * 0.30);
+          ctx.fillStyle = 'rgba(' + tones[(r() * 4) | 0] + ',' + alpha.toFixed(2) + ')';
+          ctx.beginPath();
+          ctx.ellipse(x, y, size, size * (0.8 + r() * 0.4), r() * 3, 0, 7);
+          ctx.fill();
+          placed++;
+        }
+      });
     }},
 
     { id: 'blush', label: 'blush', icon: '☺️', draw(ctx, a) {
@@ -2994,6 +3040,41 @@
     ctx.drawImage(_warpBuf, cx - r, cy - r, r * 2, r * 2);
   }
 
+
+  // A soft-focus pass over the skin, brightened a touch. This is the half of
+  // a freckles-style lens people don't consciously notice — without it the
+  // freckles read as dots stuck on a normal photo rather than as skin.
+  const _skinBuf = document.createElement('canvas');
+  const _skinCtx = _skinBuf.getContext('2d');
+  function softSkin(ctx, src, f, spec) {
+    if (!spec) return;
+    const a = anchors(f);
+    const bw = a.w * 1.3, bh = a.h * 1.25;
+    const x0 = f.cx - bw / 2, y0 = f.cy - bh / 2;
+    const W = Math.max(16, Math.ceil(bw)), H = Math.max(16, Math.ceil(bh));
+    if (_skinBuf.width !== W || _skinBuf.height !== H) { _skinBuf.width = W; _skinBuf.height = H; }
+    _skinCtx.setTransform(1, 0, 0, 1, 0, 0);
+    _skinCtx.clearRect(0, 0, W, H);
+    _skinCtx.globalCompositeOperation = 'source-over';
+    _skinCtx.filter = 'blur(' + Math.max(1, a.w * 0.03).toFixed(1) + 'px) brightness(' +
+                      (1 + (spec.brighten || 0)) + ') saturate(0.94)';
+    _skinCtx.drawImage(src, x0, y0, bw, bh, 0, 0, W, H);
+    _skinCtx.filter = 'none';
+    // feather to an oval, so hair and jaw edges don't smear
+    _skinCtx.globalCompositeOperation = 'destination-in';
+    const g = _skinCtx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.16,
+                                            W / 2, H / 2, Math.min(W, H) * 0.54);
+    g.addColorStop(0, 'rgba(0,0,0,1)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    _skinCtx.fillStyle = g;
+    _skinCtx.fillRect(0, 0, W, H);
+    _skinCtx.globalCompositeOperation = 'source-over';
+    ctx.save();
+    ctx.globalAlpha = spec.smooth == null ? 0.45 : spec.smooth;
+    ctx.drawImage(_skinBuf, x0, y0, bw, bh);
+    ctx.restore();
+  }
+
   function applyWarps(ctx, src, f, spec) {
     if (!spec || !spec.length) return;
     const w = f.size;
@@ -3082,7 +3163,8 @@
     bunny: { warp: [{ at: 'eyeL', r: 0.15, amount: 1.18 }, { at: 'eyeR', r: 0.15, amount: 1.18 }],
              grade: { tint: '#FFE6F0', alpha: 0.20 } },
     cat: { grade: { tint: '#FFE0B8', alpha: 0.18, vignette: 0.16 } },
-    freckles: { grade: { tint: '#FFCE9A', alpha: 0.20, glow: 0.06 } },
+    freckles: { beauty: { smooth: 0.44, brighten: 0.15 },
+                grade: { tint: '#FFD8A4', alpha: 0.24, glow: 0.16 } },
     blush: { warp: [{ at: 'cheekL', r: 0.19, amount: 1.10 }, { at: 'cheekR', r: 0.19, amount: 1.10 }],
              grade: { tint: '#FFC3D6', alpha: 0.26, glow: 0.10 } },
     hearteyes: { grade: { tint: '#FF9EC0', alpha: 0.28, glow: 0.12 },
@@ -3141,6 +3223,8 @@
     ctx.drawImage(source, 0, 0, srcW, srcH);
     const fx = FILTER_FX[filterId];
     if (frame && fx && fx.warp) applyWarps(ctx, source, frame, fx.warp);
+    // before the overlay art, so it smooths skin and not the freckles
+    if (frame && fx && fx.beauty) softSkin(ctx, source, frame, fx.beauty);
     if (fx) applyGrade(ctx, srcW, srcH, fx.grade);
     if (frame) paintFilter(ctx, filterId, { ...frame, t });
     if (fx) drawParticles(ctx, srcW, srcH, fx.particles, t);
