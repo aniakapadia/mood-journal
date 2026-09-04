@@ -3144,10 +3144,10 @@
     if (!spec) return;
     const lids = [f.lidL, f.lidR];
     const len = (spec.length == null ? 1 : spec.length) * f.size * 0.026;
-    const thick = (spec.thickness == null ? 1 : spec.thickness) * f.size * 0.0038;
+    const thick = (spec.thickness == null ? 1 : spec.thickness) * f.size * 0.0021;
     ctx.save();
     ctx.lineCap = 'round';
-    ctx.strokeStyle = spec.color || 'rgba(30,22,20,0.62)';
+    ctx.strokeStyle = spec.color || 'rgba(32,24,22,0.52)';
     lids.forEach(lid => {
       if (!lid || lid.length < 4) return;
       // eye centre, used to work out which way is "away from the eye"
@@ -3171,8 +3171,8 @@
         const bx = (lid[0].x - cx) / (Math.hypot(lid[0].x - cx, lid[0].y - cy) || 1);
         const by = (lid[0].y - cy) / (Math.hypot(lid[0].x - cx, lid[0].y - cy) || 1);
 
-        for (let k = -2; k <= 2; k++) {
-          const jitter = k * 0.2;
+        for (let k = -2.5; k <= 2.5; k += 0.5) {
+          const jitter = k * 0.16;
           const sx = p.x + (q.x - p.x) * (0.5 + jitter * 0.5);
           const sy = p.y + (q.y - p.y) * (0.5 + jitter * 0.5);
           const ex = sx + nx * L * 0.72 + bx * L * 0.62;
@@ -3185,7 +3185,7 @@
         }
       }
       // a soft lash line so the roots don't look like floating hairs
-      ctx.lineWidth = thick * 1.5;
+      ctx.lineWidth = thick * 0.95;
       ctx.beginPath();
       lid.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
       ctx.stroke();
