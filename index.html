@@ -2332,8 +2332,8 @@
       [-1, 1].forEach(side => {
         const cx = side * a.cheekDX * 0.9, cy = a.cheekY;
         const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, a.w * 0.25);
-        g.addColorStop(0, 'rgba(244,132,146,0.22)');
-        g.addColorStop(0.6, 'rgba(244,132,146,0.12)');
+        g.addColorStop(0, 'rgba(238,140,148,0.15)');
+        g.addColorStop(0.6, 'rgba(238,140,148,0.07)');
         g.addColorStop(1, 'rgba(244,132,146,0)');
         ctx.fillStyle = g;
         ctx.beginPath(); ctx.arc(cx, cy, a.w * 0.25, 0, 7); ctx.fill();
@@ -2341,7 +2341,7 @@
       // a warm wash over the bridge, tying the two cheeks together
       const ny = a.noseY - a.h * 0.02;
       const nb = ctx.createRadialGradient(0, ny, 0, 0, ny, a.w * 0.21);
-      nb.addColorStop(0, 'rgba(242,146,132,0.22)');
+      nb.addColorStop(0, 'rgba(240,150,138,0.13)');
       nb.addColorStop(1, 'rgba(242,146,132,0)');
       ctx.fillStyle = nb;
       ctx.beginPath(); ctx.arc(0, ny, a.w * 0.21, 0, 7); ctx.fill();
@@ -3281,10 +3281,13 @@
     bunny: { warp: [{ at: 'eyeL', r: 0.15, amount: 1.18 }, { at: 'eyeR', r: 0.15, amount: 1.18 }],
              grade: { tint: '#FFE6F0', alpha: 0.20 } },
     cat: { grade: { tint: '#FFE0B8', alpha: 0.18, vignette: 0.16 } },
-    freckles: { beauty: { smooth: 0.46, brighten: 0.16, eyes: 0.10,
-                          teeth: { brighten: 0.26, sat: 0.38 },
+    // Tuned towards real skin rather than a beauty filter: most of the
+    // smoothing and nearly all of the bloom removed, so freckles sit on skin
+    // that still has its own texture instead of on a lit, flattened surface.
+    freckles: { beauty: { smooth: 0.24, brighten: 0.06, eyes: 0.06,
+                          teeth: { brighten: 0.20, sat: 0.45 },
                           lashes: { length: 1, thickness: 1 } },
-                grade: { tint: '#FFD8A4', alpha: 0.22, glow: 0.16 } },
+                grade: { tint: '#FFEAD6', alpha: 0.11, glow: 0.03 } },
     blush: { warp: [{ at: 'cheekL', r: 0.19, amount: 1.10 }, { at: 'cheekR', r: 0.19, amount: 1.10 }],
              grade: { tint: '#FFC3D6', alpha: 0.26, glow: 0.10 } },
     hearteyes: { grade: { tint: '#FF9EC0', alpha: 0.28, glow: 0.12 },
