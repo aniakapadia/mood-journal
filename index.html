@@ -987,8 +987,10 @@
     position: absolute; inset: 0;
     width: 100%; height: 100%;
   }
-  #camVideo { object-fit: cover; }
-  #camOverlay { pointer-events: none; }
+  /* The video is only a pixel source now — the canvas draws the picture, so
+     lenses can warp and grade it instead of merely covering it. */
+  #camVideo { object-fit: cover; visibility: hidden; }
+  #camOverlay { pointer-events: none; background: #000; }
   .cam-status {
     position: absolute;
     left: 50%; top: 18px;
@@ -2217,6 +2219,12 @@
   const FILTERS = [
     { id: 'none', label: 'none', icon: '🚫', draw: null },
 
+    { id: 'bigeyes',  label: 'big eyes',  icon: '\u{1F440}', draw: null },
+    { id: 'puppy',    label: 'puppy eyes',icon: '\u{1F97A}', draw: null },
+    { id: 'chipmunk', label: 'chipmunk',  icon: '\u{1F43F}\uFE0F', draw: null },
+    { id: 'bigmouth', label: 'big mouth', icon: '\u{1F62E}', draw: null },
+    { id: 'tinyface', label: 'tiny face', icon: '\u{1F979}', draw: null },
+    { id: 'frost',    label: 'frosty',    icon: '\u{2744}\uFE0F', draw: null },
     { id: 'dog', label: 'dog', icon: '🐶', draw(ctx, a) {
       // Ears ride on top/side of the skull, which is well above the hairline
       // that landmark 10 (and therefore crownY) sits on.
@@ -2929,6 +2937,204 @@
   }
 
   // ============================================================
+  //  LENS FX  — warping, colour grading and particles
+  // ============================================================
+  //
+  // Drawing cartoon parts on top of a face only gets you so far. What makes a
+  // Snapchat lens feel like one is that it changes the face itself — your eyes
+  // really do get bigger — and that it grades the whole picture, not just the
+  // sticker. Both need the camera pixels to pass *through* the canvas rather
+  // than sit behind it, which is why the video is now drawn into the scene.
+
+  // Where a warp is anchored, in image pixels, following head tilt.
+  function anchorPoint(f, name) {
+    const a = anchors(f);
+    const map = {
+      eyeL:  [-a.eyeDX, a.eyeY],   eyeR: [a.eyeDX, a.eyeY],
+      mouth: [0, a.mouthY],        nose: [0, a.noseY],
+      cheekL: [-a.cheekDX, a.cheekY], cheekR: [a.cheekDX, a.cheekY],
+      chin:  [0, a.chinY],         face: [0, 0]
+    };
+    const [lx, ly] = map[name] || [0, 0];
+    const c = Math.cos(f.rot || 0), s = Math.sin(f.rot || 0);
+    return { x: f.cx + lx * c - ly * s, y: f.cy + lx * s + ly * c };
+  }
+
+  // Re-samples a circular patch of the source at a different scale and blends
+  // the edge away, so a bigger eye melts into the face with no visible seam.
+  const _warpBuf = document.createElement('canvas');
+  const _warpCtx = _warpBuf.getContext('2d');
+  function bulge(ctx, src, cx, cy, radius, amount, feather) {
+    const r = Math.max(6, radius);
+    const size = Math.max(8, Math.ceil(r * 2));
+    if (_warpBuf.width !== size || _warpBuf.height !== size) {
+      _warpBuf.width = size; _warpBuf.height = size;
+    }
+    _warpCtx.setTransform(1, 0, 0, 1, 0, 0);
+    _warpCtx.clearRect(0, 0, size, size);
+    _warpCtx.globalCompositeOperation = 'source-over';
+
+    // sampling a smaller area and painting it large is what magnifies
+    const s = r / amount;
+    _warpCtx.drawImage(src, cx - s, cy - s, s * 2, s * 2, 0, 0, size, size);
+
+    _warpCtx.globalCompositeOperation = 'destination-in';
+    const g = _warpCtx.createRadialGradient(r, r, r * (feather == null ? 0.5 : feather), r, r, r);
+    g.addColorStop(0, 'rgba(0,0,0,1)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    _warpCtx.fillStyle = g;
+    _warpCtx.fillRect(0, 0, size, size);
+
+    ctx.drawImage(_warpBuf, cx - r, cy - r, r * 2, r * 2);
+  }
+
+  function applyWarps(ctx, src, f, spec) {
+    if (!spec || !spec.length) return;
+    const w = f.size;
+    for (const it of spec) {
+      const p = anchorPoint(f, it.at);
+      bulge(ctx, src, p.x, p.y, w * it.r, it.amount, it.feather);
+    }
+  }
+
+  // A colour look over the whole frame — the part that makes a lens feel like
+  // a single photograph rather than a sticker sitting on a webcam still.
+  function applyGrade(ctx, w, h, g) {
+    if (!g) return;
+    ctx.save();
+    if (g.tint) {
+      ctx.globalCompositeOperation = g.blend || 'soft-light';
+      ctx.globalAlpha = g.alpha == null ? 0.35 : g.alpha;
+      ctx.fillStyle = g.tint;
+      ctx.fillRect(0, 0, w, h);
+    }
+    if (g.glow) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 1;
+      const gg = ctx.createRadialGradient(w / 2, h * 0.4, 0, w / 2, h * 0.4, Math.max(w, h) * 0.6);
+      gg.addColorStop(0, 'rgba(255,246,214,' + g.glow + ')');
+      gg.addColorStop(1, 'rgba(255,246,214,0)');
+      ctx.fillStyle = gg;
+      ctx.fillRect(0, 0, w, h);
+    }
+    if (g.vignette) {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1;
+      const r = Math.max(w, h) * 0.78;
+      const vg = ctx.createRadialGradient(w / 2, h / 2, r * 0.42, w / 2, h / 2, r);
+      vg.addColorStop(0, 'rgba(0,0,0,0)');
+      vg.addColorStop(1, 'rgba(0,0,0,' + g.vignette + ')');
+      ctx.fillStyle = vg;
+      ctx.fillRect(0, 0, w, h);
+    }
+    ctx.restore();
+  }
+
+  // Particles are a pure function of time, so the preview and the captured
+  // photo always agree and there is no drifting state to keep in sync.
+  function drawParticles(ctx, w, h, spec, t) {
+    if (!spec) return;
+    const r = rng(spec.seed || 11);
+    ctx.save();
+    for (let i = 0; i < spec.count; i++) {
+      const lane = r(), speed = 0.35 + r() * 0.8, phase = r() * 6.28, wob = r() * 6.28;
+      const size = w * spec.size * (0.55 + r() * 0.9);
+      const prog = ((t * speed * (spec.speed || 0.12) + phase) % 1.3) - 0.15;
+      const y = spec.rise ? (1 - prog) * h : prog * h;
+      const x = (lane + Math.sin(t * 0.7 + wob) * 0.05) * w;
+      const a = Math.min(1, Math.max(0, 1 - Math.abs(prog - 0.5) * 1.4)) * (spec.alpha || 0.85);
+      if (a <= 0.02) continue;
+      ctx.globalAlpha = a;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(t * (0.5 + lane) + wob);
+      const col = spec.colors[i % spec.colors.length];
+      ctx.fillStyle = col;
+      if (spec.kind === 'snow') {
+        ctx.beginPath(); ctx.arc(0, 0, size * 0.5, 0, 7); ctx.fill();
+      } else if (spec.kind === 'heart') {
+        heartPath(ctx, 0, 0, size * 0.6); ctx.fill();
+      } else if (spec.kind === 'petal') {
+        ctx.beginPath(); ctx.ellipse(0, 0, size * 0.6, size * 0.32, 0, 0, 7); ctx.fill();
+      } else if (spec.kind === 'ember') {
+        const eg = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.7);
+        eg.addColorStop(0, col); eg.addColorStop(1, 'rgba(255,90,0,0)');
+        ctx.fillStyle = eg;
+        ctx.beginPath(); ctx.arc(0, 0, size * 0.7, 0, 7); ctx.fill();
+      } else {
+        star(ctx, 0, 0, size * 0.55, 4, 0.3); ctx.fill();
+      }
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // Per-filter lens behaviour. Kept beside the filters rather than inside
+  // them so the drawing code above stays about drawing.
+  const FILTER_FX = {
+    dog: { grade: { tint: '#FFD9A0', alpha: 0.22, glow: 0.10 } },
+    bunny: { warp: [{ at: 'eyeL', r: 0.15, amount: 1.18 }, { at: 'eyeR', r: 0.15, amount: 1.18 }],
+             grade: { tint: '#FFE6F0', alpha: 0.20 } },
+    cat: { grade: { tint: '#FFE0B8', alpha: 0.18, vignette: 0.16 } },
+    freckles: { grade: { tint: '#FFCE9A', alpha: 0.20, glow: 0.06 } },
+    blush: { warp: [{ at: 'cheekL', r: 0.19, amount: 1.10 }, { at: 'cheekR', r: 0.19, amount: 1.10 }],
+             grade: { tint: '#FFC3D6', alpha: 0.26, glow: 0.10 } },
+    hearteyes: { grade: { tint: '#FF9EC0', alpha: 0.28, glow: 0.12 },
+                 particles: { kind: 'heart', count: 14, size: 0.045, speed: 0.10, rise: true,
+                              colors: ['#FF5C86', '#FF89A8', '#FFC0D2'], seed: 3 } },
+    goofy: { warp: [{ at: 'eyeL', r: 0.17, amount: 1.5 }, { at: 'eyeR', r: 0.17, amount: 1.5 }] },
+    rainbow: { grade: { tint: '#FFE9A8', alpha: 0.18, glow: 0.10 } },
+    smiley: { warp: [{ at: 'mouth', r: 0.26, amount: 1.35 }] },
+    cool: { grade: { tint: '#7FB0FF', alpha: 0.20, vignette: 0.26 } },
+    flowers: { grade: { tint: '#FFD4E6', alpha: 0.22, glow: 0.10 },
+               particles: { kind: 'petal', count: 20, size: 0.035, speed: 0.11,
+                            colors: ['#F7A8C8', '#FFD9E6', '#E8C0F0', '#FFF1B8'], seed: 7 } },
+    antlers: { grade: { tint: '#E8B87A', alpha: 0.24, vignette: 0.20 } },
+    halo: { grade: { tint: '#FFF3C8', alpha: 0.26, glow: 0.24 },
+            particles: { kind: 'star', count: 16, size: 0.03, speed: 0.09, rise: true,
+                         colors: ['#FFF3C0', '#FFFFFF'], seed: 13 } },
+    devil: { warp: [{ at: 'eyeL', r: 0.13, amount: 1.12 }, { at: 'eyeR', r: 0.13, amount: 1.12 }],
+             grade: { tint: '#FF4A3A', alpha: 0.26, vignette: 0.34 },
+             particles: { kind: 'ember', count: 16, size: 0.035, speed: 0.16, rise: true,
+                          colors: ['#FF7A3A', '#FFB03A'], seed: 17 } },
+    butterfly: { grade: { tint: '#D8C4F5', alpha: 0.20, glow: 0.08 } },
+    sparkle: { grade: { tint: '#FFF0C0', alpha: 0.20, glow: 0.16 },
+               particles: { kind: 'star', count: 22, size: 0.032, speed: 0.10,
+                            colors: ['#FFF0B8', '#FFFFFF', '#BFE8F8'], seed: 21 } },
+    mustache: { grade: { tint: '#C8A87A', alpha: 0.30, vignette: 0.30, blend: 'color' } },
+
+    // ---- warp-led lenses: these change the face rather than decorate it ----
+    bigeyes:  { warp: [{ at: 'eyeL', r: 0.19, amount: 1.75 }, { at: 'eyeR', r: 0.19, amount: 1.75 }],
+                grade: { tint: '#FFE8F2', alpha: 0.16, glow: 0.08 } },
+    puppy:    { warp: [{ at: 'eyeL', r: 0.20, amount: 1.6 }, { at: 'eyeR', r: 0.20, amount: 1.6 },
+                       { at: 'mouth', r: 0.16, amount: 0.88 }],
+                grade: { tint: '#FFD9C0', alpha: 0.22, glow: 0.12 },
+                particles: { kind: 'star', count: 10, size: 0.028, speed: 0.08, rise: true,
+                             colors: ['#FFFFFF', '#FFE9C0'], seed: 29 } },
+    chipmunk: { warp: [{ at: 'cheekL', r: 0.24, amount: 1.42 }, { at: 'cheekR', r: 0.24, amount: 1.42 },
+                       { at: 'nose', r: 0.10, amount: 0.85 }],
+                grade: { tint: '#FFE0B0', alpha: 0.18 } },
+    bigmouth: { warp: [{ at: 'mouth', r: 0.30, amount: 1.7 }],
+                grade: { tint: '#FFE4D0', alpha: 0.16 } },
+    tinyface: { warp: [{ at: 'face', r: 0.62, amount: 0.78, feather: 0.72 }],
+                grade: { tint: '#DCEBFF', alpha: 0.16, vignette: 0.22 } },
+    frost:    { grade: { tint: '#9FD0FF', alpha: 0.32, vignette: 0.26, blend: 'screen' },
+                particles: { kind: 'snow', count: 34, size: 0.022, speed: 0.13,
+                             colors: ['#FFFFFF', '#DCEEFF'], seed: 31 } }
+  };
+
+  // One pipeline for both the live preview and the saved photo, so what you
+  // see through the shutter is exactly what lands in the journal.
+  function renderScene(ctx, source, srcW, srcH, frame, filterId, t) {
+    ctx.drawImage(source, 0, 0, srcW, srcH);
+    const fx = FILTER_FX[filterId];
+    if (frame && fx && fx.warp) applyWarps(ctx, source, frame, fx.warp);
+    if (fx) applyGrade(ctx, srcW, srcH, fx.grade);
+    if (frame) paintFilter(ctx, filterId, { ...frame, t });
+    if (fx) drawParticles(ctx, srcW, srcH, fx.particles, t);
+  }
+
+  // ============================================================
   //  LIVE CAMERA
   // ============================================================
 
@@ -3058,15 +3264,15 @@
     const ctx = ov.getContext('2d');
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, ov.width, ov.height);
-    const f = cameraFrame();
-    if (f) {
-      ctx.save();
-      ctx.scale(dpr, dpr);
-      ctx.translate(offX, offY);
-      ctx.scale(scale, scale);
-      paintFilter(ctx, cam.filterId, { ...f, t: (now - cam.t0) / 1000 });
-      ctx.restore();
-    }
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.translate(offX, offY);
+    ctx.scale(scale, scale);
+    // The camera image is painted by the canvas rather than shown behind it,
+    // which is what lets a lens magnify an eye or tint the whole picture.
+    renderScene(ctx, v, v.videoWidth, v.videoHeight, cameraFrame(),
+                cam.filterId, (now - cam.t0) / 1000);
+    ctx.restore();
   }
 
   // The tracked face when we have one. When tracking is working but no face is
@@ -3116,12 +3322,9 @@
 
     ctx.save();
     if (cam.mirror) { ctx.translate(outW, 0); ctx.scale(-1, 1); }   // WYSIWYG
-    ctx.drawImage(v, 0, 0, outW, outH);
-    const f = cameraFrame();
-    if (f) {
-      ctx.scale(k, k);
-      paintFilter(ctx, cam.filterId, { ...f, t: (performance.now() - cam.t0) / 1000 });
-    }
+    ctx.scale(k, k);
+    renderScene(ctx, v, v.videoWidth, v.videoHeight, cameraFrame(),
+                cam.filterId, (performance.now() - cam.t0) / 1000);
     ctx.restore();
 
     const filterId = cam.filterId;
@@ -3219,11 +3422,12 @@
     const { ctx, src, view, frame, scale } = studio;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, view.width, view.height);
-    ctx.drawImage(src, 0, 0, view.width, view.height);
-
     ctx.save();
     ctx.scale(scale, scale);
-    paintFilter(ctx, studio.filterId, { ...frame, t: (performance.now() - (studio.t0 || 0)) / 1000 });
+    // Same pipeline as the camera, so a library photo gets the warps, the
+    // colour grade and the particles too.
+    renderScene(ctx, src, src.width, src.height, frame, studio.filterId,
+                (performance.now() - (studio.t0 || 0)) / 1000);
     ctx.restore();
 
     // Positioning guide — preview only, never composited into the saved photo.
@@ -3355,8 +3559,9 @@
     const out = document.createElement('canvas');
     out.width = src.width; out.height = src.height;
     const octx = out.getContext('2d');
-    octx.drawImage(src, 0, 0);
-    paintFilter(octx, filterId, frame);          // no guide ellipse here
+    // no guide ellipse here — this is the saved image
+    renderScene(octx, src, src.width, src.height, frame, filterId,
+                (performance.now() - (studio.t0 || 0)) / 1000);
     try {
       const blob = await canvasToBlob(out, 'image/jpeg', 0.82);
       if (pendingPhoto && pendingPhoto.url) URL.revokeObjectURL(pendingPhoto.url);
