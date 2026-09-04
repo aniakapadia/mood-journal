@@ -2930,6 +2930,9 @@
   // the inner lip ring — the opening of the mouth, i.e. exactly the teeth
   const LIP_INNER = [78, 95, 88, 178, 87, 14, 317, 402, 318, 324,
                      308, 415, 310, 311, 312, 13, 82, 81, 80, 191];
+  // upper eyelid lines, outer corner first, so lashes follow the real eye
+  const LID_UPPER_L = [33, 246, 161, 160, 159, 158, 157, 173];
+  const LID_UPPER_R = [263, 466, 388, 387, 386, 385, 384, 398];
 
   // Landmarks -> the same {cx, cy, size, rot, ...} frame the filters already
   // understand, so tracked and manual paths share one drawing pipeline.
@@ -2973,6 +2976,8 @@
       mouthY: mc.y,
       mouthHalfW: dist(mL, mR) / 2,
       mouthPoly: LIP_INNER.map(i => P(i)),
+      lidL: LID_UPPER_L.map(i => P(i)),
+      lidR: LID_UPPER_R.map(i => P(i)),
       mouthOpen
     };
   }
@@ -3130,6 +3135,64 @@
     ctx.restore();
   }
 
+
+  // Lashes are drawn along the real upper eyelid rather than guessed from the
+  // iris, so they sit on the lash line whatever shape the eye is and however
+  // the head is tilted. They lengthen towards the outer corner, the way both
+  // real lashes and mascara do.
+  function drawLashes(ctx, f, spec) {
+    if (!spec) return;
+    const lids = [f.lidL, f.lidR];
+    const len = (spec.length == null ? 1 : spec.length) * f.size * 0.026;
+    const thick = (spec.thickness == null ? 1 : spec.thickness) * f.size * 0.0038;
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = spec.color || 'rgba(30,22,20,0.62)';
+    lids.forEach(lid => {
+      if (!lid || lid.length < 4) return;
+      // eye centre, used to work out which way is "away from the eye"
+      let cx = 0, cy = 0;
+      lid.forEach(p => { cx += p.x; cy += p.y; });
+      cx /= lid.length; cy /= lid.length;
+
+      for (let i = 0; i < lid.length - 1; i++) {
+        const p = lid[i], q = lid[i + 1];
+        // outward normal, flipped to always point away from the eye
+        let nx = -(q.y - p.y), ny = q.x - p.x;
+        const nl = Math.hypot(nx, ny) || 1;
+        nx /= nl; ny /= nl;
+        if ((p.x - cx) * nx + (p.y - cy) * ny < 0) { nx = -nx; ny = -ny; }
+
+        // longest a third of the way in from the outer corner, tapering inward
+        const t = i / (lid.length - 1);
+        const grow = Math.max(0.25, 1 - Math.abs(t - 0.22) * 1.35);
+        const L = len * grow;
+        // curl back towards the outer corner
+        const bx = (lid[0].x - cx) / (Math.hypot(lid[0].x - cx, lid[0].y - cy) || 1);
+        const by = (lid[0].y - cy) / (Math.hypot(lid[0].x - cx, lid[0].y - cy) || 1);
+
+        for (let k = -2; k <= 2; k++) {
+          const jitter = k * 0.2;
+          const sx = p.x + (q.x - p.x) * (0.5 + jitter * 0.5);
+          const sy = p.y + (q.y - p.y) * (0.5 + jitter * 0.5);
+          const ex = sx + nx * L * 0.72 + bx * L * 0.62;
+          const ey = sy + ny * L * 0.72 + by * L * 0.62;
+          ctx.lineWidth = thick * grow;
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          ctx.quadraticCurveTo(sx + nx * L * 0.55, sy + ny * L * 0.55, ex, ey);
+          ctx.stroke();
+        }
+      }
+      // a soft lash line so the roots don't look like floating hairs
+      ctx.lineWidth = thick * 1.5;
+      ctx.beginPath();
+      lid.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
   function applyWarps(ctx, src, f, spec) {
     if (!spec || !spec.length) return;
     const w = f.size;
@@ -3219,7 +3282,8 @@
              grade: { tint: '#FFE6F0', alpha: 0.20 } },
     cat: { grade: { tint: '#FFE0B8', alpha: 0.18, vignette: 0.16 } },
     freckles: { beauty: { smooth: 0.46, brighten: 0.16, eyes: 0.10,
-                          teeth: { brighten: 0.26, sat: 0.38 } },
+                          teeth: { brighten: 0.26, sat: 0.38 },
+                          lashes: { length: 1, thickness: 1 } },
                 grade: { tint: '#FFD8A4', alpha: 0.22, glow: 0.16 } },
     blush: { warp: [{ at: 'cheekL', r: 0.19, amount: 1.10 }, { at: 'cheekR', r: 0.19, amount: 1.10 }],
              grade: { tint: '#FFC3D6', alpha: 0.26, glow: 0.10 } },
@@ -3255,7 +3319,8 @@
     slim:     { warp: [{ at: 'face', r: 0.70, amount: 0.80, amountY: 1.02, feather: 0.62 }],
                 grade: { tint: '#E8E0FF', alpha: 0.12 } },
     glow:     { beauty: { smooth: 0.58, brighten: 0.20, eyes: 0.16,
-                          teeth: { brighten: 0.34, sat: 0.30 } },
+                          teeth: { brighten: 0.34, sat: 0.30 },
+                          lashes: { length: 0.8, thickness: 0.85 } },
                 grade: { tint: '#FFEBD6', alpha: 0.20, glow: 0.18 } },
     bigeyes:  { warp: [{ at: 'eyeL', r: 0.19, amount: 1.75 }, { at: 'eyeR', r: 0.19, amount: 1.75 }],
                 grade: { tint: '#FFE8F2', alpha: 0.16, glow: 0.08 } },
@@ -3287,6 +3352,7 @@
       softSkin(ctx, source, frame, fx.beauty);
       whitenTeeth(ctx, source, frame, fx.beauty.teeth);
       brightenEyes(ctx, frame, fx.beauty.eyes);
+      drawLashes(ctx, frame, fx.beauty.lashes);
     }
     if (fx) applyGrade(ctx, srcW, srcH, fx.grade);
     if (frame) paintFilter(ctx, filterId, { ...frame, t });
